@@ -48,6 +48,5 @@ void _start(void) {
 
     printf("hi");
 
-    // We're done, just hang...
     hcf();
 }
