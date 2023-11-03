@@ -3,10 +3,10 @@
 #include <stdbool.h>
 #include <string.h>
 #include "video.h"
-#include "printf.h"
+#include "stdio.h"
 #include "../flanterm/flanterm.h"
 #include "../flanterm/backends/fb.h"
-#include "../limine.h"
+#include <limine.h>
 
 
 #define FORMAT_LENGTH       1
@@ -78,6 +78,9 @@ int printf(const char *format_string, ...){
                         ;
                         int ch = va_arg(a_list, int);
                         print_char(ft_ctx, ch);
+                        break;
+                    case 'x':
+                        print_hex(ft_ctx, va_arg(a_list, int));
                         break;
                     case '}':
                         state = NORMAL;

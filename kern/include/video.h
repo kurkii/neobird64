@@ -14,13 +14,13 @@ position draw_char_pt(position pos, struct limine_framebuffer *fb, char c);
 void print_char(struct flanterm_context *ft_ctx, char c);
 void print_str(struct flanterm_context *ft_ctx, char *str);
 void print_int(struct flanterm_context *ft_ctx, int i);
+void print_hex(struct flanterm_context *ft_ctx, int num);
 
-#define COLOR_BLACK "\u001b[30m"\
-#define COLOR_RED    "\u001b[31m"
-#define COLOR_GREEN "\u001b[32m"
-#define COLOR_YELLOW "\u001b[33m"
-#define COLOR_BLUE "\u001b[34m"
-#define COLOR_MAGENTA "\u001b[35m"
-#define COLOR_CYAN "\u001b[36m"
-#define COLOR_WHITE "\u001b[37m"
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
 

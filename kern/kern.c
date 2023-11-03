@@ -1,13 +1,15 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
-#include "limine.h"
-#include "video/video.h"
-#include "video/font.c"
+#include <stdio.h>
+#include <video.h>
+#include <log.h>
 #include "flanterm/flanterm.h"
 #include "flanterm/backends/fb.h"
-#include "video/printf.h"
-
+#include "limine.h"
+#include "sys/gdt/gdt.h"
+#include "sys/idt/idt.h"
+#include "sys/acpi/acpi.h"
  
 static volatile struct limine_framebuffer_request framebuffer_request = {
     .id = LIMINE_FRAMEBUFFER_REQUEST,
@@ -43,10 +45,19 @@ struct flanterm_context *ft_ctx;
 
 void _start(void) {
     
-    struct flanterm_context *ft_ctx = fb_init();
+    ft_ctx = fb_init();
     const char msg[] = "Hello world\n";
 
-    printf("hi");
-
+    printf("{k}Welcome to Neobird64{kn}", ANSI_COLOR_CYAN, ANSI_COLOR_RESET);
+    log_info("Loading GDT...");
+    gdt_init();
+    log_success("GDT loaded!");
+    log_info("Loading IDT...");
+    idt_init();
+    log_success("IDT loaded!");
+    printf("Hi!{n}");
+    //printf("{xn}", 12400);
+    init_acpi();
+    // We're done, just hang...
     hcf();
 }
