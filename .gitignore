@@ -1,3 +1,7 @@
 build/
 iso_root/
 limine/
+.clangd
+bochslog.txt
+bochsrc
+bx_enh_dbg.ini
