@@ -58,6 +58,7 @@ extern void s_isr28();
 extern void s_isr29();
 extern void s_isr30();
 extern void s_isr31();
+extern void apic_timer();
 void idt_init(void){
     idtpr.base = (uintptr_t)&idt[0];
     idtpr.limit = (uint16_t)sizeof(idtentry) * 256 - 1;
@@ -94,6 +95,7 @@ void idt_init(void){
     idt_set_gate(29, s_isr29, 0x8E);
     idt_set_gate(30, s_isr30, 0x8E);
     idt_set_gate(31, s_isr31, 0x8E);
+    idt_set_gate(32, apic_timer, 0x8E);
 
     idt_load();
 }
@@ -146,7 +148,7 @@ void exception_handler(struct int_frame *r){
         printf("rip {d} | cs {d} | ss {d} | rsp {d} s| rflags {dn}", r->rip, r->cs, r->ss, r->rsp, r->rflags);
         __asm__ volatile ("cli; hlt"); // Completely hangs the computer
     }else{
-        printf("unhandled interrupt {d}", r->int_no);
+        printf("what the shit did you do: int {d}", r->int_no);
         __asm__ volatile ("cli; hlt"); // Completely hangs the computer
     }
     

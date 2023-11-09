@@ -112,16 +112,16 @@ typedef struct {
 typedef struct {
     sdt_t header;
 
-    uint32_t *lapicaddr;
+    uint32_t lapicaddr;
     uint32_t flags;
 
-    madt_plapic_t *plapic;     // 0
-    madt_ioapic_t *ioapic;     // 1
-    madt_iso_t *iso;           // 2
-    madt_nmi_t *nmisource;     // 3
-    madt_lapicnmi_t *lapicnmi; // 4
-
+    madt_record_t first_ics;
 } __attribute((packed)) madt_t;
+
+typedef struct {
+    uint32_t type;
+    madt_record_t header;
+} __attribute((packed)) ics_list_t;
 
 int acpi_table_checksum(xsdt_t *t);
 void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt);

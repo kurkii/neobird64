@@ -16,50 +16,60 @@ void print_int(struct flanterm_context *ft_ctx, int num){
     int arr[64];
     int j = 0;
     int digitscount = 0;
-        int digitiszero = 1;
 
     while(num != 0){
         int mod = num % 10;
         arr[j] = mod;
         num /= 10;
         j++;
+
+        if(j == 64){            // ub handling like any good programmer
+                return;
+        }
+
         digitscount = j;
+        if(num == 0){
+                arr[j] = mod;
+        }
     }
     for(int i = digitscount-1; i != -1; i--){
-                switch(arr[i]){
-                        case 1:
-                                print_char(ft_ctx, '1');
-                                break;
-                        case 2:
-                                print_char(ft_ctx, '2');
-                                break;
-                        case 3:
-                                print_char(ft_ctx, '3');
-                                break;
-                        case 4:
-                                print_char(ft_ctx, '4');
-                                break;
-                        case 5:
-                                print_char(ft_ctx, '5');
-                                break;
-                        case 6:
-                                print_char(ft_ctx, '6');
-                                break;
-                        case 7:
-                                print_char(ft_ctx, '7');
-                                break;
-                        case 8:
-                                print_char(ft_ctx, '8');
-                                break;
-                        case 9:
-                                print_char(ft_ctx, '9');
-                                break;
-                }
-                digitiszero = 0;
-    }
-        if(digitiszero == 1){
-                print_char(ft_ctx, '0');           // hacky solution but whatever
+        switch(arr[i]){
+                case 1:
+                        print_char(ft_ctx, '1');
+                        break;
+                case 2:
+                        print_char(ft_ctx, '2');
+                        break;
+                case 3:
+                        print_char(ft_ctx, '3');
+                        break;
+                case 4:
+                        print_char(ft_ctx, '4');
+                        break;
+                case 5:
+                        print_char(ft_ctx, '5');
+                        break;
+                case 6:
+                        print_char(ft_ctx, '6');
+                        break;
+                case 7:
+                        print_char(ft_ctx, '7');
+                        break;
+                case 8:
+                        print_char(ft_ctx, '8');
+                        break;
+                case 9:
+                        print_char(ft_ctx, '9');
+                        break;
+                case 0:
+                        print_char(ft_ctx, '0');
+                        break;
         }
+                
+    }
+    if(digitscount == 0){
+        print_char(ft_ctx, '0');
+    }
 }
 
 void print_hex(struct flanterm_context *ft_ctx, int num){
@@ -123,9 +133,8 @@ void print_hex(struct flanterm_context *ft_ctx, int num){
                                 print_char(ft_ctx, 'F');
                                 break;
                 }
-                digitiszero = 0;
     }
-        if(digitiszero == 1){
+        if(digitiszero == 0){
                 print_char(ft_ctx, '0');           // hacky solution but whatever
         }
 }

@@ -15,7 +15,8 @@ CFLAGS += -Wall \
     -mno-sse \
     -mno-sse2 \
     -mno-red-zone \
-	-I kern/include
+	-I kern/include \
+	-g
 LDFLAGS += -m elf_x86_64 \
     -nostdlib \
     -static \
@@ -43,6 +44,7 @@ all:
 	amd64-elf-gcc -c $(KERN)/include/log.c -o $(BUILD_DIR)/log.o $(CFLAGS)
 	amd64-elf-gcc -c $(KERN)/flanterm/flanterm.c -o $(BUILD_DIR)/flanterm.o $(CFLAGS)
 	amd64-elf-gcc -c $(KERN)/flanterm/backends/fb.c -o $(BUILD_DIR)/fb.o $(CFLAGS)
+	amd64-elf-gcc -c $(KERN)/include/io.c -o $(BUILD_DIR)/io.o $(CFLAGS)
 
 	amd64-elf-gcc -c $(KERN)/include/string.c -o $(BUILD_DIR)/string.o $(CFLAGS)
 
@@ -79,3 +81,6 @@ all:
 
 	# Install Limine stage 1 and 2 for legacy BIOS boot.
 	./limine/limine bios-install $(BUILD_DIR)/neobird64.iso
+
+
+

@@ -1,6 +1,35 @@
 #define FONT_CHARS 96
 #define FONT_WIDTH 8
 
+    madt_record_t *cur_ics = (madt_record_t*)(&madt->first_ics);
+    int length = madt->header.length - sizeof(madt_t) + 2;
+    while(length > 0){
+        printf("entry type: {dn}entry size: {dn}", cur_ics->entry_type, cur_ics->record_length);
+        switch (cur_ics->entry_type) {
+            case 0: 
+                printf("Found LAPIC (0){n}");
+                break;
+            case 1: 
+                printf("Found IOAPIC (1){n}"); 
+                break;
+            case 2: 
+                printf("Found ISO (2){n}"); 
+                break;
+            case 3: 
+                printf("Found NMIS (3){n}"); 
+                break;
+            case 4: 
+                printf("Found LAPICNMI (4){n}"); 
+                break;
+        }
+        length -= cur_ics->record_length;
+        cur_ics = (madt_record_t*)((void*)cur_ics + cur_ics->record_length-sizeof(madt_record_t));
+        /* if(cur_ics->record_length == 0){break;}; */
+    }
+    
+    //printf("4: {dn}sizeof(madt_plapic_t): {dn}sizeof(madt_plapic_t)/2: {dn}", 4, sizeof(madt_plapic_t), sizeof(madt_plapic_t)/2);
+
+
 const unsigned char font[FONT_CHARS][FONT_WIDTH] = {
 	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}, //  
 	{0xdf,0xdf,0x00,0x00,0x00,0x00,0x00,0x00}, // !

@@ -80,7 +80,7 @@ int printf(const char *format_string, ...){
                         print_char(ft_ctx, ch);
                         break;
                     case 'x':
-                        print_hex(ft_ctx, va_arg(a_list, int));
+                        print_hex(ft_ctx, va_arg(a_list, uint32_t));
                         break;
                     case '}':
                         state = NORMAL;

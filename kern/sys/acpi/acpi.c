@@ -67,7 +67,7 @@ void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt){
         entries = (xsdt->header.length - sizeof(sdt_t))/ 8;
         printf("acpi: using the XSDT{n}");
         printf("acpi: revision: {dn}", xsdt->header.revision);
-        printf("acpi: OEMID: {cccccccn}", xsdt->header.OEMID[0], xsdt->header.OEMID[1], xsdt->header.OEMID[2], xsdt->header.OEMID[3], xsdt->header.OEMID[4], xsdt->header.OEMID[5]);
+        printf("acpi: OEMID: {ccccccn}", xsdt->header.OEMID[0], xsdt->header.OEMID[1], xsdt->header.OEMID[2], xsdt->header.OEMID[3], xsdt->header.OEMID[4], xsdt->header.OEMID[5]);
     }
 
     printf("acpi: ACPI entries: {dn}", entries);
@@ -79,9 +79,9 @@ void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt){
             header = (sdt_t*)xsdt->tableptrs[i];
         }
         
-        printf("debug: table[{i}]: '{s}'{n}", i, header->signature);
+        printf("debug: table[{i}]: '{cccc}'{n}", i, header->signature[0], header->signature[1], header->signature[2], header->signature[3]);
         if(!memcmp(header->signature, signature, 4)){
-            printf("acpi: Found table with signature '{s}'{n}", signature);
+            printf("acpi: Found table with signature '{cccc}'{n}", signature[0], signature[1], signature[2], signature[3]);
             return (void*)header;
         }
     }

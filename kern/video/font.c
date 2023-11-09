@@ -304,6 +304,31 @@ char font_L[20][10] = {
     0, 1, 1, 1, 1, 1, 1, 1, 1, 0,
 };
 
+void init_apic(madt_t *madt, uint64_t hhdmoffset){ 
+    madt_record_t *cur_ics = &madt->first_ics;
+    int length = madt->header.length - sizeof(madt_t) - 2;
+    while(length > 0){
+        switch (cur_ics->entry_type) {
+            case 0: 
+                printf("Found LAPIC (0){n}");
+                madt_plapic_t *ics0 = (madt_plapic_t*)cur_ics;
+                printf("LAPIC id: {dn}", ics0->apicID);
+                break;
+            case 1: printf("Found IOAPIC (1){n}"); break;
+            case 2: 
+                printf("Found ISO (2){n}");
+                madt_iso_t *ics2 = (madt_iso_t*)cur_ics;
+                printf("ISO id: {dn}", ics2->entry_length); */
+
+                break;
+            case 3: printf("Found NMIS (3){n}"); break;
+            case 4: printf("Found LAPICNMI (4){n}"); break;
+        }
+        length -= cur_ics->record_length;
+        cur_ics = (madt_record_t*)((uint64_t)cur_ics + cur_ics->record_length); */
+    }
+}  
+
 char font_M[20][10] = {
     0, 1, 1, 0, 0, 0, 0, 1, 1, 0,
     0, 1, 1, 1, 0, 0, 1, 1, 1, 0,

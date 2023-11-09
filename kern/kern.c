@@ -47,7 +47,6 @@ void _start(void) {
     
     ft_ctx = fb_init();
     const char msg[] = "Hello world\n";
-
     printf("{k}Welcome to Neobird64{kn}", ANSI_COLOR_CYAN, ANSI_COLOR_RESET);
     log_info("Loading GDT...");
     gdt_init();
@@ -56,6 +55,8 @@ void _start(void) {
     idt_init();
     log_success("IDT loaded!");
     printf("Hi!{n}");
+    printf("{dn}", 10);
+    //asm("int $0x3");
     //printf("{xn}", 12400);
     init_acpi();
     // We're done, just hang...
