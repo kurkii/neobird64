@@ -89,7 +89,7 @@ void apic_eoi(){
 
 void apic_timer(){
     printf("placeholder{n}");
-    apic_eoi();
+    //apic_eoi();
 }
 
 void ioapic_configure_redirentry(uint8_t entry, redirection_entry_t* redirentry_addr){
@@ -180,7 +180,7 @@ void calibrate_timer(madt_t *madt){
     apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x3);         // set divider 16
     apic_write(lapic_address, LAPIC_INITCNT_REG, 0xFFFFFFFF);   // set timer counter
     //printf("br2");
-    pmt_delay(5000);
+    pmt_delay(50000);
 
     apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x10000);     // 0x10000 = masked, sdm
     //printf("br");
@@ -189,7 +189,6 @@ void calibrate_timer(madt_t *madt){
     apic_write(lapic_address, LAPIC_LVTTIMER_REG, 32 | LAPIC_PERIODIC);
     apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x3);         // 16
     apic_write(lapic_address, LAPIC_INITCNT_REG, calibration);
-
 
 }
 

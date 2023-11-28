@@ -37,7 +37,7 @@ rsdt_t *parse_rsdt(uint64_t hhdmoffset, rsdp_t *rsdp){
     return (rsdt_t*)(rsdp->rsdtaddress + hhdmoffset);
 }
 
-void pmt_delay(int us){
+void pmt_delay(size_t us){
     if(fadt->PMTimerLength != 4){
         log_panic("ACPI Timer unavailable"); // panic for now
     }
