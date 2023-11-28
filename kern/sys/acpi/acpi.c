@@ -5,6 +5,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#define PMT_TIMER_RATE 3579545 // 3.57 MHz
+
+rsdt_t *rsdt;
+xsdt_t *xsdt;
+fadt_t *fadt;
+uint64_t hhdmoffset;
 static volatile struct limine_rsdp_request rsdp_request = {
     .id = LIMINE_RSDP_REQUEST,
     .revision = 0
@@ -31,26 +37,55 @@ rsdt_t *parse_rsdt(uint64_t hhdmoffset, rsdp_t *rsdp){
     return (rsdt_t*)(rsdp->rsdtaddress + hhdmoffset);
 }
 
+void pmt_delay(int us){
+    if(fadt->PMTimerLength != 4){
+        log_panic("ACPI Timer unavailable"); // panic for now
+    }
+    printf("bruj");
+    uint64_t* addr = (uint64_t*)fadt->X_PMTimerBlock.Address;
+    printf("bru1j");
+    size_t count = inl(fadt->PMTimerBlock);\
+    printf("bru2j");
+    size_t target = (us*PMT_TIMER_RATE)/1000000;
+    printf("bru3j");
+    size_t current = 0;
+
+    while (current < target) {
+        current = ((inl(fadt->PMTimerBlock) - count) & 0xffffff);
+    }
+    
+
+}
+
+fadt_t *fetch_fadt(uint64_t hhdmoffset){
+    return find_acpi_table("FACP", rsdt, xsdt);
+}
+
 void init_acpi(void){
-    uint64_t hhdmoffset = hhdm_request.response->offset;
+    hhdmoffset = hhdm_request.response->offset;
     rsdp_t *rsdp = (rsdp_t*)rsdp_request.response->address;
 
-
-    rsdt_t *rsdt = parse_rsdt(hhdmoffset, rsdp);
-    xsdt_t *xsdt = parse_xsdt(hhdmoffset, rsdp);
+    rsdt = parse_rsdt(hhdmoffset, rsdp);
+    xsdt = parse_xsdt(hhdmoffset, rsdp);
 
     madt_t *madt = find_acpi_table("APIC", rsdt, xsdt);       // APIC - signature of MADT table
 
     if(madt == NULL){
         log_panic("MADT table not found, hanging");
     }
-    
+
+    fadt = find_acpi_table("FACP", rsdt, xsdt);
+
+    if(fadt == NULL){
+       log_panic("FADT table not found, hanging");
+    }
+
+    printf("{x}", hhdmoffset);
     init_apic(madt, hhdmoffset);
 
+
+    
 }
-
-
-
 
 void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt){
     int usexsdt;

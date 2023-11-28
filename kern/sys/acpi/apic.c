@@ -4,29 +4,41 @@
 #include <stdint.h>
 #include <limine.h>
 #include <io.h>
+#include "../idt/idt.h"
+#include "../pic/pic.h"
 
-#define LAPIC_ID_REG        0x20        // lapic id register
-#define LAPIC_VERSION_REG   0x30        // lapic version register
+#define LAPIC_ID_REG        0x20            // lapic id register
+#define LAPIC_VERSION_REG   0x30            // lapic version register
  
-#define LAPIC_EOI_REG       0xB0        // end of interrupt register
-#define LAPIC_SIVR_REG      0xF0        // spurious interrupt vector register
+#define LAPIC_EOI_REG       0xB0            // end of interrupt register
+#define LAPIC_SIVR_REG      0xF0            // spurious interrupt vector register
 
-#define LAPIC_ICR_LOW       0x300       // low 32 bits of the ICR 
-#define LAPIC_ICR_HIGH      0x310       // high 32 bits of the ICR (xAPIC only, 2xAPIC has a 64-bit MSR for the ICR)
+#define LAPIC_ICR_LOW       0x300           // low 32 bits of the ICR 
+#define LAPIC_ICR_HIGH      0x310           // high 32 bits of the ICR (xAPIC only, 2xAPIC has a 64-bit MSR for the ICR)
+
+#define LAPIC_LVT_LINT0     0x350
+#define LAPIC_LVT_LINT1     0x360
 
 #define LAPIC_TIMERDIV_REG  0x3E0
 #define LAPIC_LVTTIMER_REG  0x320
+#define LAPIC_INITCNT_REG   0x380
+#define LAPIC_CURCNT_REG    0x390
+#define LAPIC_PERIODIC      0x20000
 
 #define LAPIC_EOI_COMMAND   0x0
 
 #define IA32_APIC_BASE_MSR  0x1B
 
+#define IOAPICID_REG        0x0
+#define IOAPICVER_REG       0x1
+#define IOAPICARB_REG       0x2
+#define IOAPICREDTBL_REG(n) (0x10 + 2 * n)  // n being which redtbl register (0-24)
 
 
-
-uint64_t lapic_address;
+uint32_t *lapic_address;
 uint64_t ioapic_address;
 
+madt_ics_t ics_array[64];
 
 static volatile struct limine_smp_request smp_request = {
     .id = LIMINE_SMP_REQUEST,
@@ -47,6 +59,12 @@ void ioapic_write(void *ioapicaddr, uint8_t reg, uint32_t value){
     ioapicptr[4] = value;
 }
 
+void ioapic_redt_write(void *ioapicaddr, uint8_t reg, uint64_t value){
+    uint64_t volatile *ioapicptr = (uint64_t volatile*) ioapicaddr;
+    ioapicptr[0] = (reg & 0xFF);
+    ioapicptr[4] = value;
+}
+
 uint32_t apic_read(void* apic_base, uint32_t reg) {
     return *((volatile uint32_t*)(apic_base + reg));
 }
@@ -55,28 +73,55 @@ void apic_write(void* apic_base, uint32_t reg, uint32_t data) {
     *((volatile uint32_t*)(apic_base + reg)) = data;
 }
 
+
+
 void apic_send_interrupt(void* apic_base, uint8_t apic, uint8_t vector) {
     apic_write(apic_base, LAPIC_ICR_HIGH, ((uint32_t)apic) << 24);
     apic_write(apic_base, LAPIC_ICR_LOW, vector);
+    
 }
+
+void apic_eoi(){
+    apic_write((void*)lapic_address, LAPIC_EOI_REG, LAPIC_EOI_COMMAND);
+}
+
+
 
 void apic_timer(){
-    printf("hi{n}");
+    printf("placeholder{n}");
+    apic_eoi();
 }
 
-/* void locate_lapics(madt_t *madt){
-    madt_record_t *header;
+void ioapic_configure_redirentry(uint8_t entry, redirection_entry_t* redirentry_addr){
+    redirection_entry_t *redirentry = redirentry_addr;
+    redirentry->vector_num          = 32+entry;
+}
 
-    for(int i = 0; i < 32; i++){
-        header = &madt->structs[i];
-        if(header->entry_type == 2){
-            printf("found 2{n}");
+void ioapic_init(){
+    int gsi;
+    uint32_t ioapic_aaddress;
+    for(int i = 0; i < 64; i++){
+        if(ics_array[i].type == 2){
+            madt_iso_t *iso = (madt_iso_t*)ics_array[i].address;
+            if(iso->source == 0){                                              // looks for legacy PIC IRQ 0
+                printf("Found the timers GSI{n}");
+                int gsi = iso->gsi;                                            // iso->gsi is the IOAPIC pin to which the apic timer is connected
+            }
         }
-        *header = *(header + header->record_length);
+        if(ics_array[i].type == 1){
+            madt_ioapic_t *ioapic = (madt_ioapic_t*)ics_array[i].address;
+            ioapic_aaddress = ioapic->ioapicaddr;
+        }
     }
-} */
+
+    redirection_entry_t redirentry;
+    ioapic_configure_redirentry(0, &redirentry);                                // timer
+    ioapic_write((uint32_t*)ioapic_aaddress, IOAPICREDTBL_REG(gsi), *(uint32_t*)&redirentry);
+    ioapic_write((uint32_t*)ioapic_aaddress, IOAPICREDTBL_REG(gsi), *(uint64_t*)&redirentry >> 32);
+}
 
 uint64_t *get_madt_tables(madt_t *madt){
+    int i = 0;
     madt_record_t *cur_ics = &madt->first_ics;
     int length = madt->header.length - sizeof(madt_t) + 2;
     while(length > 0){
@@ -87,18 +132,36 @@ uint64_t *get_madt_tables(madt_t *madt){
                 if(plapic->flags == 0){
                     break;
                 }else{
+                    printf("Found CPU: {dn}", plapic->apicID);
+                    ics_array[i].address = (uint64_t*)cur_ics;
+                    ics_array[i].type = cur_ics->entry_type;
+                    i++;
                     break;
                 }
-                //printf("Type: {dn}", cur_ics->entry_type);
                 break;
             case 1:
                 
-                //printf("IOAPIC: {dn}", cur_ics->record_length);
+                printf("IOAPIC: {dn}", cur_ics->record_length);
+                madt_ioapic_t *ioapic = (madt_ioapic_t*)cur_ics;
                 
-                //printf("Type: {dn}", cur_ics->entry_type);
+                ics_array[i].address = (uint64_t*)cur_ics;
+                ics_array[i].type = cur_ics->entry_type;
+                i++;
+
+                ioapic_address = ioapic->ioapicaddr;
+                printf("IOAPIC ID: {dn}", ioapic->ioapicID);
+
                 break;
             case 2:
-                //printf("NMIs: {dn}", cur_ics->record_length);
+                ;
+                ics_array[i].address = (uint64_t*)cur_ics;
+                ics_array[i].type = cur_ics->entry_type;
+                i++;
+                madt_iso_t *iso = (madt_iso_t*)cur_ics;
+                printf("ISO:{dn}", i);
+                printf("bus:{dn}", iso->bus);
+                printf("source:{dn}", iso->source);
+                printf("gsi:{dnn}", iso->gsi);
                 break;
         }
         //printf("length: {dn}", length);
@@ -111,16 +174,42 @@ uint64_t get_lapic_base(){
     return rdmsr(IA32_APIC_BASE_MSR);
 }
 
+void calibrate_timer(madt_t *madt){
+    //printf("br");
+    lapic_address = (uint32_t*)madt->lapicaddr;
+    apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x3);         // set divider 16
+    apic_write(lapic_address, LAPIC_INITCNT_REG, 0xFFFFFFFF);   // set timer counter
+    //printf("br2");
+    pmt_delay(5000);
+
+    apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x10000);     // 0x10000 = masked, sdm
+    //printf("br");
+    uint32_t calibration = 0xffffffff - apic_read(lapic_address, LAPIC_CURCNT_REG);
+
+    apic_write(lapic_address, LAPIC_LVTTIMER_REG, 32 | LAPIC_PERIODIC);
+    apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x3);         // 16
+    apic_write(lapic_address, LAPIC_INITCNT_REG, calibration);
+
+
+}
+
 void init_apic(madt_t *madt, uint64_t hhdmoffset){ 
+
+    // fetch madt tables
     get_madt_tables(madt);
+
+    // initialize LAPIC
     printf("acpi: MADT tables listed through{n}");
     printf("acpi: writing to SIV register{n}");
-    uint32_t apic_base;
-    apic_base = madt->lapicaddr;
-    printf("{x}", apic_base);
-    uint32_t spurious_reg = apic_read((void*)apic_base, LAPIC_SIVR_REG);
-    apic_write((void*)apic_base, LAPIC_SIVR_REG, spurious_reg | 0x1FF);
-    printf("acpi: test interrupt{n}");
-    apic_send_interrupt((void*)apic_base, 0, 32);   // ICR: sdm 11.6.1
+    uint64_t lapic_address = madt->lapicaddr;
+    uint32_t spurious_reg = apic_read((void*)madt->lapicaddr, LAPIC_SIVR_REG);
     
+    apic_write((void*)madt->lapicaddr, LAPIC_SIVR_REG, spurious_reg | 0x100); // start recieving ints
+
+    // initalize timer
+    idt_set_gate(32, apic_timer, 0x8e);
+    calibrate_timer(madt);
+
+    // initalize IOAPIC
+    ioapic_init();
 }

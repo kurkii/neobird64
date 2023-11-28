@@ -7,3 +7,7 @@ void pic_init(void);
 void pic_sendeoi(unsigned char irq);
 void pic_unmask(unsigned char irq);
 void pic_mask(unsigned char irq);
+
+void timer_install();
+void timer_handler(struct regs *r);
+void timer_phase(int hz);

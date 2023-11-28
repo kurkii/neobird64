@@ -44,7 +44,6 @@ struct flanterm_context *ft_ctx;
 
 
 void _start(void) {
-    
     ft_ctx = fb_init();
     const char msg[] = "Hello world\n";
     printf("{k}Welcome to Neobird64{kn}", ANSI_COLOR_CYAN, ANSI_COLOR_RESET);

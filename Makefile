@@ -16,7 +16,7 @@ CFLAGS += -Wall \
     -mno-sse2 \
     -mno-red-zone \
 	-I kern/include \
-	-g
+	-O0
 LDFLAGS += -m elf_x86_64 \
     -nostdlib \
     -static \
@@ -56,6 +56,9 @@ all:
 
 	amd64-elf-gcc -c $(KERN)/sys/acpi/acpi.c -o $(BUILD_DIR)/acpi.o $(CFLAGS)
 	amd64-elf-gcc -c $(KERN)/sys/acpi/apic.c -o $(BUILD_DIR)/apic.o $(CFLAGS)
+	amd64-elf-gcc -c $(KERN)/sys/pic/pit.c -o $(BUILD_DIR)/pit.o $(CFLAGS)
+
+
 	
 
 	amd64-elf-ld -o $(BUILD_DIR)/neobird64.elf  $(BUILD_DIR)/*.o $(LDFLAGS)
@@ -82,5 +85,62 @@ all:
 	# Install Limine stage 1 and 2 for legacy BIOS boot.
 	./limine/limine bios-install $(BUILD_DIR)/neobird64.iso
 
+
+debug:
+
+# make build directory
+	mkdir -p $(BUILD_DIR)
+
+	# build & link boot and kernel files
+
+
+	amd64-elf-gcc -c $(KERN)/kern.c -g -o $(BUILD_DIR)/kern.o $(CFLAGS) 
+
+	amd64-elf-gcc -c $(KERN)/include/video.c -g -o $(BUILD_DIR)/video.o $(CFLAGS)
+	amd64-elf-gcc -c $(KERN)/include/printf.c -g -o $(BUILD_DIR)/printf.o $(CFLAGS)
+	amd64-elf-gcc -c $(KERN)/include/log.c -g -o $(BUILD_DIR)/log.o $(CFLAGS)
+	amd64-elf-gcc -c $(KERN)/flanterm/flanterm.c -g -o $(BUILD_DIR)/flanterm.o $(CFLAGS)
+	amd64-elf-gcc -c $(KERN)/flanterm/backends/fb.c -g -o $(BUILD_DIR)/fb.o $(CFLAGS)
+	amd64-elf-gcc -c $(KERN)/include/io.c -g -o $(BUILD_DIR)/io.o $(CFLAGS)
+
+	amd64-elf-gcc -c $(KERN)/include/string.c -g -o $(BUILD_DIR)/string.o $(CFLAGS)
+
+	amd64-elf-gcc -c $(KERN)/sys/gdt/gdt.c -g -o $(BUILD_DIR)/gdt.o $(CFLAGS)
+	nasm 	 		 $(KERN)/sys/gdt/gdt.asm -g -o $(BUILD_DIR)/gdt_asm.o $(NASMFLAGS)
+
+	amd64-elf-gcc -c $(KERN)/sys/idt/idt.c -g -o $(BUILD_DIR)/idt.o $(CFLAGS)
+	nasm 	 		 $(KERN)/sys/idt/idt.asm -g -o $(BUILD_DIR)/idt_asm.o $(NASMFLAGS)
+
+	amd64-elf-gcc -c $(KERN)/sys/acpi/acpi.c -g -o $(BUILD_DIR)/acpi.o $(CFLAGS)
+	amd64-elf-gcc -c $(KERN)/sys/acpi/apic.c -g -o $(BUILD_DIR)/apic.o $(CFLAGS)
+	
+
+	amd64-elf-ld -o $(BUILD_DIR)/neobird64.elf  $(BUILD_DIR)/*.o $(LDFLAGS)
+
+	objcopy --only-keep-debug $(BUILD_DIR)/neobird64.elf $(BUILD_DIR)/neobird64.debug
+
+	objcopy --strip-debug $(BUILD_DIR)/neobird64.elf
+
+	# Create a directory which will be our ISO root.
+	mkdir -p iso_root
+
+	# Copy the relevant files over.
+	cp -v $(BUILD_DIR)/neobird64.elf limine.cfg limine/limine-bios.sys \
+		limine/limine-bios-cd.bin limine/limine-uefi-cd.bin iso_root/
+
+	# Create the EFI boot tree and copy Limine's EFI executables over.
+	mkdir -p iso_root/EFI/BOOT
+	cp -v limine/BOOTX64.EFI iso_root/EFI/BOOT/
+	cp -v limine/BOOTIA32.EFI iso_root/EFI/BOOT/
+
+	# Create the bootable ISO.
+	xorriso -as mkisofs -b limine-bios-cd.bin \
+			-no-emul-boot -boot-load-size 4 -boot-info-table \
+			--efi-boot limine-uefi-cd.bin \
+			-efi-boot-part --efi-boot-image --protective-msdos-label \
+			iso_root -o $(BUILD_DIR)/neobird64.iso
+
+	# Install Limine stage 1 and 2 for legacy BIOS boot.
+	./limine/limine bios-install $(BUILD_DIR)/neobird64.iso
 
 

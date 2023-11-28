@@ -40,9 +40,4 @@ void gdt_init(){
     
     s_setgdt(gdtr.limit_low, gdtr.base);
 
-    //s_settss();
-
-    //s_flushgdt();
-
-    
 }

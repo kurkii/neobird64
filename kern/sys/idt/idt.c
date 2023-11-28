@@ -95,7 +95,7 @@ void idt_init(void){
     idt_set_gate(29, s_isr29, 0x8E);
     idt_set_gate(30, s_isr30, 0x8E);
     idt_set_gate(31, s_isr31, 0x8E);
-    idt_set_gate(32, apic_timer, 0x8E);
+    //idt_set_gate(32, apic_timer, 0x8E);
 
     idt_load();
 }
@@ -143,9 +143,9 @@ void exception_handler(struct int_frame *r){
     if(r->int_no < 32){
         printf("interrupt no. {d}: {snn}", r->int_no, exception_messages[r->int_no]);
         printf("rax {d} | rbx {d} | rcx {d} | rdx {dn}", r->rax, r->rbx, r->rcx, r->rdx);
-        printf("rdi {d} | rsi {d} | rbp {dn}", r->rdi, r->rsi, r->rbp);
+        printf("rdi {d} | rsi 0x{x} | rbp 0x{xn}", r->rdi, r->rsi, r->rbp);
         printf("r8 {d} | r9 {d} | r10 {d} | r11 {d} | r12 {d} | r13 {d} | r14 {d} | r15 {dn}", r->r8, r->r9, r->r10, r->r11, r->r12, r->r13, r->r14, r->r15);
-        printf("rip {d} | cs {d} | ss {d} | rsp {d} s| rflags {dn}", r->rip, r->cs, r->ss, r->rsp, r->rflags);
+        printf("rip 0x{x} | cs {d} | ss {d} | rsp 0x{x} | rflags {dn}", r->rip, r->cs, r->ss, r->rsp, r->rflags);
         __asm__ volatile ("cli; hlt"); // Completely hangs the computer
     }else{
         printf("what the shit did you do: int {d}", r->int_no);

@@ -31,11 +31,12 @@
         arguments
     
     available format specifiers:
-        {i}, {d} - interger
+        {i}, {d} - integer
         {s}      - string
         {c}      - char
         {k}      - color
-        {n}      - newline
+        {n}      - newline (doesnt take in a argument)
+        {x}      - base16
  */
 
 
@@ -81,6 +82,15 @@ int printf(const char *format_string, ...){
                         break;
                     case 'x':
                         print_hex(ft_ctx, va_arg(a_list, uint32_t));
+                        break;
+                    case 'l':
+                        current++;
+                        switch (current) {
+                            case 'd':
+                                print_int(ft_ctx, va_arg(a_list, long long int));
+                                break;
+                        
+                        }
                         break;
                     case '}':
                         state = NORMAL;
