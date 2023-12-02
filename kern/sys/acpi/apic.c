@@ -89,7 +89,7 @@ void apic_eoi(){
 
 void apic_timer(){
     printf("placeholder{n}");
-    //apic_eoi();
+    apic_eoi();
 }
 
 void ioapic_configure_redirentry(uint8_t entry, redirection_entry_t* redirentry_addr){
@@ -179,17 +179,17 @@ void calibrate_timer(madt_t *madt){
     lapic_address = (uint32_t*)madt->lapicaddr;
     apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x3);         // set divider 16
     apic_write(lapic_address, LAPIC_INITCNT_REG, 0xFFFFFFFF);   // set timer counter
-    //printf("br2");
+    printf("br2");
     pmt_delay(50000);
 
     apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x10000);     // 0x10000 = masked, sdm
-    //printf("br");
+    printf("br2");
     uint32_t calibration = 0xffffffff - apic_read(lapic_address, LAPIC_CURCNT_REG);
+    printf("br2");
 
     apic_write(lapic_address, LAPIC_LVTTIMER_REG, 32 | LAPIC_PERIODIC);
     apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x3);         // 16
     apic_write(lapic_address, LAPIC_INITCNT_REG, calibration);
-
 }
 
 void init_apic(madt_t *madt, uint64_t hhdmoffset){ 
@@ -203,12 +203,12 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     uint64_t lapic_address = madt->lapicaddr;
     uint32_t spurious_reg = apic_read((void*)madt->lapicaddr, LAPIC_SIVR_REG);
     
-    apic_write((void*)madt->lapicaddr, LAPIC_SIVR_REG, spurious_reg | 0x100); // start recieving ints
+    apic_write((void*)madt->lapicaddr, LAPIC_SIVR_REG, spurious_reg | (0x100)); // start recieving ints
 
     // initalize timer
     idt_set_gate(32, apic_timer, 0x8e);
     calibrate_timer(madt);
-
+    
     // initalize IOAPIC
     ioapic_init();
 }
