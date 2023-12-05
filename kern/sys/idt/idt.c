@@ -1,4 +1,5 @@
 #include "idt.h"
+#include "../acpi/apic.h"
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -58,7 +59,9 @@ extern void s_isr28();
 extern void s_isr29();
 extern void s_isr30();
 extern void s_isr31();
-extern void apic_timer();
+
+extern void s_isr172();
+
 void idt_init(void){
     idtpr.base = (uintptr_t)&idt[0];
     idtpr.limit = (uint16_t)sizeof(idtentry) * 256 - 1;
@@ -95,7 +98,7 @@ void idt_init(void){
     idt_set_gate(29, s_isr29, 0x8E);
     idt_set_gate(30, s_isr30, 0x8E);
     idt_set_gate(31, s_isr31, 0x8E);
-    //idt_set_gate(32, apic_timer, 0x8E);
+    idt_set_gate(172, s_isr172, 0x8E);
 
     idt_load();
 }
@@ -147,10 +150,11 @@ void exception_handler(struct int_frame *r){
         printf("r8 {d} | r9 {d} | r10 {d} | r11 {d} | r12 {d} | r13 {d} | r14 {d} | r15 {dn}", r->r8, r->r9, r->r10, r->r11, r->r12, r->r13, r->r14, r->r15);
         printf("rip 0x{x} | cs {d} | ss {d} | rsp 0x{x} | rflags {dn}", r->rip, r->cs, r->ss, r->rsp, r->rflags);
         __asm__ volatile ("cli; hlt"); // Completely hangs the computer
-    }else{
-        printf("what the shit did you do: int {d}", r->int_no);
-        __asm__ volatile ("cli; hlt"); // Completely hangs the computer
+    }
+
+    if(r->int_no == 0xAC){               // apic timer
+        apic_timer();
     }
     
-    for(;;);
+    //for(;;);
 }

@@ -10,6 +10,7 @@
 #include "sys/gdt/gdt.h"
 #include "sys/idt/idt.h"
 #include "sys/acpi/acpi.h"
+#include "sys/acpi/apic.h"
  
 static volatile struct limine_framebuffer_request framebuffer_request = {
     .id = LIMINE_FRAMEBUFFER_REQUEST,
@@ -34,7 +35,7 @@ struct flanterm_context *fb_init(){
 
 
 static void hcf(void) {
-    asm ("cli");
+    //asm ("cli");
     for (;;) {
         asm ("hlt");
     }
@@ -54,10 +55,16 @@ void _start(void) {
     idt_init();
     log_success("IDT loaded!");
     printf("Hi!{n}");
-    printf("{dn}", 10);
+    //printf("{dn}", 10);
     //asm("int $0x3");
-    //printf("{xn}", 12400);
+    printf("epic win: {xn}", 394949334);
     init_acpi();
+    printf("hi1");
+    apic_sleep(1000);
+    printf("hi2");
     // We're done, just hang...
     hcf();
+    
+    //asm("int $0x10");
+
 }

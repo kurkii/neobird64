@@ -38,6 +38,8 @@
 uint32_t *lapic_address;
 uint64_t ioapic_address;
 
+uint64_t apic_timer_ticks;
+
 madt_ics_t ics_array[64];
 
 static volatile struct limine_smp_request smp_request = {
@@ -85,10 +87,16 @@ void apic_eoi(){
     apic_write((void*)lapic_address, LAPIC_EOI_REG, LAPIC_EOI_COMMAND);
 }
 
+void apic_sleep(int ms){
+    int curcnt = apic_timer_ticks;
+    while (apic_timer_ticks - curcnt < ms) {
+        ;
+    }
+}
 
 
 void apic_timer(){
-    printf("placeholder{n}");
+    apic_timer_ticks++;
     apic_eoi();
 }
 
@@ -98,7 +106,7 @@ void ioapic_configure_redirentry(uint8_t entry, redirection_entry_t* redirentry_
 }
 
 void ioapic_init(){
-    int gsi;
+/*     int gsi;
     uint32_t ioapic_aaddress;
     for(int i = 0; i < 64; i++){
         if(ics_array[i].type == 2){
@@ -112,12 +120,7 @@ void ioapic_init(){
             madt_ioapic_t *ioapic = (madt_ioapic_t*)ics_array[i].address;
             ioapic_aaddress = ioapic->ioapicaddr;
         }
-    }
-
-    redirection_entry_t redirentry;
-    ioapic_configure_redirentry(0, &redirentry);                                // timer
-    ioapic_write((uint32_t*)ioapic_aaddress, IOAPICREDTBL_REG(gsi), *(uint32_t*)&redirentry);
-    ioapic_write((uint32_t*)ioapic_aaddress, IOAPICREDTBL_REG(gsi), *(uint64_t*)&redirentry >> 32);
+    } */
 }
 
 uint64_t *get_madt_tables(madt_t *madt){
@@ -175,25 +178,21 @@ uint64_t get_lapic_base(){
 }
 
 void calibrate_timer(madt_t *madt){
-    //printf("br");
     lapic_address = (uint32_t*)madt->lapicaddr;
-    apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x3);         // set divider 16
+    apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x3);         // set divisor 16
     apic_write(lapic_address, LAPIC_INITCNT_REG, 0xFFFFFFFF);   // set timer counter
-    printf("br2");
-    pmt_delay(50000);
+    pmt_delay(10);
 
     apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x10000);     // 0x10000 = masked, sdm
-    printf("br2");
     uint32_t calibration = 0xffffffff - apic_read(lapic_address, LAPIC_CURCNT_REG);
-    printf("br2");
-
-    apic_write(lapic_address, LAPIC_LVTTIMER_REG, 32 | LAPIC_PERIODIC);
+    apic_write(lapic_address, LAPIC_LVTTIMER_REG, 172 | LAPIC_PERIODIC);
     apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x3);         // 16
     apic_write(lapic_address, LAPIC_INITCNT_REG, calibration);
+
 }
 
 void init_apic(madt_t *madt, uint64_t hhdmoffset){ 
-
+    asm("cli");
     // fetch madt tables
     get_madt_tables(madt);
 
@@ -206,9 +205,10 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     apic_write((void*)madt->lapicaddr, LAPIC_SIVR_REG, spurious_reg | (0x100)); // start recieving ints
 
     // initalize timer
-    idt_set_gate(32, apic_timer, 0x8e);
+    //idt_set_gate(32, apic_timer, 0x8e);
     calibrate_timer(madt);
     
     // initalize IOAPIC
-    ioapic_init();
+    //ioapic_init();
+    asm("sti");
 }
