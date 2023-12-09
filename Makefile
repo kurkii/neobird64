@@ -1,5 +1,7 @@
 BUILD_DIR = build
 KERN = kern
+CC = amd64-elf-gcc
+AC = nasm
 CFLAGS += -Wall \
     -Wextra \
     -std=gnu11 \
@@ -36,31 +38,30 @@ all:
 
 	# build & link boot and kernel files
 
+	$(CC) -c $(KERN)/kern.c -o $(BUILD_DIR)/kern.o $(CFLAGS)
 
-	amd64-elf-gcc -c $(KERN)/kern.c -o $(BUILD_DIR)/kern.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/video.c -o $(BUILD_DIR)/video.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/printf.c -o $(BUILD_DIR)/printf.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/log.c -o $(BUILD_DIR)/log.o $(CFLAGS)
+	$(CC) -c $(KERN)/flanterm/flanterm.c -o $(BUILD_DIR)/flanterm.o $(CFLAGS)
+	$(CC) -c $(KERN)/flanterm/backends/fb.c -o $(BUILD_DIR)/fb.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/io.c -o $(BUILD_DIR)/io.o $(CFLAGS)
 
-	amd64-elf-gcc -c $(KERN)/include/video.c -o $(BUILD_DIR)/video.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/include/printf.c -o $(BUILD_DIR)/printf.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/include/log.c -o $(BUILD_DIR)/log.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/flanterm/flanterm.c -o $(BUILD_DIR)/flanterm.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/flanterm/backends/fb.c -o $(BUILD_DIR)/fb.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/include/io.c -o $(BUILD_DIR)/io.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/string.c -o $(BUILD_DIR)/string.o $(CFLAGS)
 
-	amd64-elf-gcc -c $(KERN)/include/string.c -o $(BUILD_DIR)/string.o $(CFLAGS)
+	$(CC) -c $(KERN)/sys/gdt/gdt.c -o $(BUILD_DIR)/gdt.o $(CFLAGS)
+	$(AC) 	 $(KERN)/sys/gdt/gdt.asm -o $(BUILD_DIR)/gdt_asm.o $(NASMFLAGS)
 
-	amd64-elf-gcc -c $(KERN)/sys/gdt/gdt.c -o $(BUILD_DIR)/gdt.o $(CFLAGS)
-	nasm 	 		 $(KERN)/sys/gdt/gdt.asm -o $(BUILD_DIR)/gdt_asm.o $(NASMFLAGS)
+	$(CC) -c $(KERN)/sys/idt/idt.c -o $(BUILD_DIR)/idt.o $(CFLAGS)
+	$(AC) 	 $(KERN)/sys/idt/idt.asm -o $(BUILD_DIR)/idt_asm.o $(NASMFLAGS)
 
-	amd64-elf-gcc -c $(KERN)/sys/idt/idt.c -o $(BUILD_DIR)/idt.o $(CFLAGS)
-	nasm 	 		 $(KERN)/sys/idt/idt.asm -o $(BUILD_DIR)/idt_asm.o $(NASMFLAGS)
+	$(CC) -c $(KERN)/sys/acpi/acpi.c -o $(BUILD_DIR)/acpi.o $(CFLAGS)
+	$(CC) -c $(KERN)/sys/acpi/apic.c -o $(BUILD_DIR)/apic.o $(CFLAGS)
+	$(CC) -c $(KERN)/sys/pic/pit.c -o $(BUILD_DIR)/pit.o $(CFLAGS)
 
-	amd64-elf-gcc -c $(KERN)/sys/acpi/acpi.c -o $(BUILD_DIR)/acpi.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/sys/acpi/apic.c -o $(BUILD_DIR)/apic.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/sys/pic/pit.c -o $(BUILD_DIR)/pit.o $(CFLAGS)
+	$(CC) -c $(KERN)/sys/keyboard/ps2.c -o $(BUILD_DIR)/ps2.o $(CFLAGS)
 
-
-	
-
+	# link everything to an elf
 	amd64-elf-ld -o $(BUILD_DIR)/neobird64.elf  $(BUILD_DIR)/*.o $(LDFLAGS)
 
 	# Create a directory which will be our ISO root.
@@ -94,25 +95,25 @@ debug:
 	# build & link boot and kernel files
 
 
-	amd64-elf-gcc -c $(KERN)/kern.c -g -o $(BUILD_DIR)/kern.o $(CFLAGS) 
+	$(CC) -c $(KERN)/kern.c -g -o $(BUILD_DIR)/kern.o $(CFLAGS) 
 
-	amd64-elf-gcc -c $(KERN)/include/video.c -g -o $(BUILD_DIR)/video.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/include/printf.c -g -o $(BUILD_DIR)/printf.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/include/log.c -g -o $(BUILD_DIR)/log.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/flanterm/flanterm.c -g -o $(BUILD_DIR)/flanterm.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/flanterm/backends/fb.c -g -o $(BUILD_DIR)/fb.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/include/io.c -g -o $(BUILD_DIR)/io.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/video.c -g -o $(BUILD_DIR)/video.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/printf.c -g -o $(BUILD_DIR)/printf.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/log.c -g -o $(BUILD_DIR)/log.o $(CFLAGS)
+	$(CC) -c $(KERN)/flanterm/flanterm.c -g -o $(BUILD_DIR)/flanterm.o $(CFLAGS)
+	$(CC) -c $(KERN)/flanterm/backends/fb.c -g -o $(BUILD_DIR)/fb.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/io.c -g -o $(BUILD_DIR)/io.o $(CFLAGS)
 
-	amd64-elf-gcc -c $(KERN)/include/string.c -g -o $(BUILD_DIR)/string.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/string.c -g -o $(BUILD_DIR)/string.o $(CFLAGS)
 
-	amd64-elf-gcc -c $(KERN)/sys/gdt/gdt.c -g -o $(BUILD_DIR)/gdt.o $(CFLAGS)
-	nasm 	 		 $(KERN)/sys/gdt/gdt.asm -g -o $(BUILD_DIR)/gdt_asm.o $(NASMFLAGS)
+	$(CC) -c $(KERN)/sys/gdt/gdt.c -g -o $(BUILD_DIR)/gdt.o $(CFLAGS)
+	$(AC) 	 		 $(KERN)/sys/gdt/gdt.asm -g -o $(BUILD_DIR)/gdt_asm.o $(NASMFLAGS)
 
-	amd64-elf-gcc -c $(KERN)/sys/idt/idt.c -g -o $(BUILD_DIR)/idt.o $(CFLAGS)
-	nasm 	 		 $(KERN)/sys/idt/idt.asm -g -o $(BUILD_DIR)/idt_asm.o $(NASMFLAGS)
+	$(CC) -c $(KERN)/sys/idt/idt.c -g -o $(BUILD_DIR)/idt.o $(CFLAGS)
+	$(AC) 	 		 $(KERN)/sys/idt/idt.asm -g -o $(BUILD_DIR)/idt_asm.o $(NASMFLAGS)
 
-	amd64-elf-gcc -c $(KERN)/sys/acpi/acpi.c -g -o $(BUILD_DIR)/acpi.o $(CFLAGS)
-	amd64-elf-gcc -c $(KERN)/sys/acpi/apic.c -g -o $(BUILD_DIR)/apic.o $(CFLAGS)
+	$(CC) -c $(KERN)/sys/acpi/acpi.c -g -o $(BUILD_DIR)/acpi.o $(CFLAGS)
+	$(CC) -c $(KERN)/sys/acpi/apic.c -g -o $(BUILD_DIR)/apic.o $(CFLAGS)
 	
 
 	amd64-elf-ld -o $(BUILD_DIR)/neobird64.elf  $(BUILD_DIR)/*.o $(LDFLAGS)

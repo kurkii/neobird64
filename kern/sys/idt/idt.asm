@@ -34,6 +34,7 @@ global s_isr28
 global s_isr29
 global s_isr30
 global s_isr31
+global s_isr33
 global s_isr172
 
 s_isr0:
@@ -239,6 +240,12 @@ s_isr31:
     
     push qword 0
     push qword 31
+    jmp isr_common_stub
+
+s_isr33:
+    
+    push qword 0
+    push qword 33
     jmp isr_common_stub
 
 s_isr172:

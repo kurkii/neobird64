@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <limine.h>
 #include <io.h>
+#include <log.h>
 #include "../idt/idt.h"
 #include "../pic/pic.h"
 
@@ -36,7 +37,7 @@
 
 
 uint32_t *lapic_address;
-uint64_t ioapic_address;
+uint64_t *ioapic_address;
 
 uint64_t apic_timer_ticks;
 
@@ -100,27 +101,40 @@ void apic_timer(){
     apic_eoi();
 }
 
-void ioapic_configure_redirentry(uint8_t entry, redirection_entry_t* redirentry_addr){
-    redirection_entry_t *redirentry = redirentry_addr;
-    redirentry->vector_num          = 32+entry;
+void ioapic_configure_entry(uint64_t* addr, uint8_t reg, uint64_t val){
+    ioapic_write(addr, IOAPICREDTBL_REG(reg), (uint32_t)val);               // lower 32 bits   
+    ioapic_write(addr, IOAPICREDTBL_REG(reg)+1, (uint32_t)(val >> 32));     // higher 32 bits
+
 }
 
 void ioapic_init(){
-/*     int gsi;
-    uint32_t ioapic_aaddress;
+    int max_entries = (ioapic_read(ioapic_address, IOAPICVER_REG) >> 16) & 0xFF;
+    for(int i = 0; i != max_entries; i++){                                           // mask all the pins
+        ioapic_configure_entry(ioapic_address, IOAPICREDTBL_REG(i), 1 << 16);
+    }
+
+    ps2_int_init();
+}
+
+int find_gsi(int legacy_pin){
     for(int i = 0; i < 64; i++){
         if(ics_array[i].type == 2){
             madt_iso_t *iso = (madt_iso_t*)ics_array[i].address;
-            if(iso->source == 0){                                              // looks for legacy PIC IRQ 0
-                printf("Found the timers GSI{n}");
-                int gsi = iso->gsi;                                            // iso->gsi is the IOAPIC pin to which the apic timer is connected
+            if(iso->source == legacy_pin){                                              
+                printf("Found legacy pin: {d}, which is connected to IOAPIC pin: {dn}", legacy_pin, iso->gsi);
+                return iso->gsi;                                          
             }
         }
-        if(ics_array[i].type == 1){
-            madt_ioapic_t *ioapic = (madt_ioapic_t*)ics_array[i].address;
-            ioapic_aaddress = ioapic->ioapicaddr;
-        }
-    } */
+    }
+
+    return legacy_pin; // we didnt find anything, meaning that legacy_pin == gsi   
+}
+void ps2_int_init(){
+    // find the pin to which the keyboard is set (legacy IRQ 1)
+    int gsi = find_gsi(1);
+    ioapic_write(ioapic_address, IOAPICREDTBL_REG(gsi), 0 << 16);           // unmask
+    ioapic_write(ioapic_address, IOAPICREDTBL_REG(gsi), 33);                // set vector to 33
+
 }
 
 uint64_t *get_madt_tables(madt_t *madt){
@@ -151,7 +165,7 @@ uint64_t *get_madt_tables(madt_t *madt){
                 ics_array[i].type = cur_ics->entry_type;
                 i++;
 
-                ioapic_address = ioapic->ioapicaddr;
+                ioapic_address = (uint64_t*)ioapic->ioapicaddr;
                 printf("IOAPIC ID: {dn}", ioapic->ioapicID);
 
                 break;
@@ -181,7 +195,7 @@ void calibrate_timer(madt_t *madt){
     lapic_address = (uint32_t*)madt->lapicaddr;
     apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x3);         // set divisor 16
     apic_write(lapic_address, LAPIC_INITCNT_REG, 0xFFFFFFFF);   // set timer counter
-    pmt_delay(10);
+    pmt_delay(1000);
 
     apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x10000);     // 0x10000 = masked, sdm
     uint32_t calibration = 0xffffffff - apic_read(lapic_address, LAPIC_CURCNT_REG);
@@ -209,6 +223,8 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     calibrate_timer(madt);
     
     // initalize IOAPIC
-    //ioapic_init();
+    ioapic_init();
     asm("sti");
+
+    log_success("LAPIC initialized");
 }

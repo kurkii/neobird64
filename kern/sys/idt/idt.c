@@ -1,5 +1,6 @@
 #include "idt.h"
 #include "../acpi/apic.h"
+#include "../keyboard/ps2.h"
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -60,7 +61,9 @@ extern void s_isr29();
 extern void s_isr30();
 extern void s_isr31();
 
-extern void s_isr172();
+extern void s_isr33();      // PS/2 keyboard
+
+extern void s_isr172();     // apic timer
 
 void idt_init(void){
     idtpr.base = (uintptr_t)&idt[0];
@@ -98,6 +101,7 @@ void idt_init(void){
     idt_set_gate(29, s_isr29, 0x8E);
     idt_set_gate(30, s_isr30, 0x8E);
     idt_set_gate(31, s_isr31, 0x8E);
+    idt_set_gate(33, s_isr33, 0x8E);
     idt_set_gate(172, s_isr172, 0x8E);
 
     idt_load();
@@ -155,6 +159,8 @@ void exception_handler(struct int_frame *r){
     if(r->int_no == 0xAC){               // apic timer
         apic_timer();
     }
-    
-    //for(;;);
+
+    if(r->int_no == 33){
+        ps2_interrupt();
+    }
 }

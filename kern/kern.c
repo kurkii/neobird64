@@ -60,7 +60,7 @@ void _start(void) {
     printf("epic win: {xn}", 394949334);
     init_acpi();
     printf("hi1");
-    apic_sleep(1000);
+    apic_sleep(1);
     printf("hi2");
     // We're done, just hang...
     hcf();

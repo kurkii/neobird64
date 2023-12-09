@@ -41,13 +41,9 @@ void pmt_delay(size_t us){
     if(fadt->PMTimerLength != 4){
         log_panic("ACPI Timer unavailable"); // panic for now
     }
-    printf("bruj");
     uint64_t* addr = (uint64_t*)fadt->X_PMTimerBlock.Address;
-    printf("bru1j");
-    size_t count = inl(fadt->PMTimerBlock);\
-    printf("bru2j");
+    size_t count = inl(fadt->PMTimerBlock);
     size_t target = (us*PMT_TIMER_RATE)/1000000;
-    printf("bru3j");
     size_t current = 0;
 
     while (current < target) {
