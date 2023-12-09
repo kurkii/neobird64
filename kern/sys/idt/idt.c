@@ -152,7 +152,7 @@ void exception_handler(struct int_frame *r){
         printf("rax {d} | rbx {d} | rcx {d} | rdx {dn}", r->rax, r->rbx, r->rcx, r->rdx);
         printf("rdi {d} | rsi 0x{x} | rbp 0x{xn}", r->rdi, r->rsi, r->rbp);
         printf("r8 {d} | r9 {d} | r10 {d} | r11 {d} | r12 {d} | r13 {d} | r14 {d} | r15 {dn}", r->r8, r->r9, r->r10, r->r11, r->r12, r->r13, r->r14, r->r15);
-        printf("rip 0x{x} | cs {d} | ss {d} | rsp 0x{x} | rflags {dn}", r->rip, r->cs, r->ss, r->rsp, r->rflags);
+        printf("rip 0x{x} | cs {d} | ss {d} | rsp 0x{x} | rflags 0x{xn}", r->rip, r->cs, r->ss, r->rsp, r->rflags);
         __asm__ volatile ("cli; hlt"); // Completely hangs the computer
     }
 
@@ -161,6 +161,7 @@ void exception_handler(struct int_frame *r){
     }
 
     if(r->int_no == 33){
+        printf("{n}handler: OK{n}");
         ps2_interrupt();
     }
 }

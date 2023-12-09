@@ -5,11 +5,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#define PMT_TIMER_RATE 3579545 // 3.57 MHz
-
 rsdt_t *rsdt;
 xsdt_t *xsdt;
 fadt_t *fadt;
+
+#define PMT_TIMER_RATE 3579545 // 3.57 MHz
+
 uint64_t hhdmoffset;
 static volatile struct limine_rsdp_request rsdp_request = {
     .id = LIMINE_RSDP_REQUEST,
@@ -53,7 +54,7 @@ void pmt_delay(size_t us){
 
 }
 
-fadt_t *fetch_fadt(uint64_t hhdmoffset){
+fadt_t *fetch_fadt(){
     return find_acpi_table("FACP", rsdt, xsdt);
 }
 
@@ -86,22 +87,22 @@ void init_acpi(void){
 void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt){
     int usexsdt;
     int entries;
-
+    printf("acpi: looking for table with signature '{cccc}'{n}", signature[0], signature[1], signature[2], signature[3]);
     if(!xsdt){                                                      // checks if the XSDT is available
         usexsdt = 0;
         entries = (rsdt->header.length - sizeof(sdt_t))/ 4;
-        printf("acpi: using the RSDT{n}");
+/*         printf("acpi: using the RSDT{n}");
         printf("acpi: revision: {dn}", rsdt->header.revision);
-        printf("acpi: OEMID: {sn}", rsdt->header.OEMID);
+        printf("acpi: OEMID: {sn}", rsdt->header.OEMID); */
     }else{
         usexsdt = 1;
         entries = (xsdt->header.length - sizeof(sdt_t))/ 8;
-        printf("acpi: using the XSDT{n}");
+/*         printf("acpi: using the XSDT{n}");
         printf("acpi: revision: {dn}", xsdt->header.revision);
-        printf("acpi: OEMID: {ccccccn}", xsdt->header.OEMID[0], xsdt->header.OEMID[1], xsdt->header.OEMID[2], xsdt->header.OEMID[3], xsdt->header.OEMID[4], xsdt->header.OEMID[5]);
+        printf("acpi: OEMID: {ccccccn}", xsdt->header.OEMID[0], xsdt->header.OEMID[1], xsdt->header.OEMID[2], xsdt->header.OEMID[3], xsdt->header.OEMID[4], xsdt->header.OEMID[5]); */
     }
 
-    printf("acpi: ACPI entries: {dn}", entries);
+/*     printf("acpi: ACPI entries: {dn}", entries); */
     for(int i = 0; i < entries; i++){
         sdt_t *header;
         if(usexsdt == 0){
@@ -110,7 +111,6 @@ void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt){
             header = (sdt_t*)xsdt->tableptrs[i];
         }
         
-        printf("debug: table[{i}]: '{cccc}'{n}", i, header->signature[0], header->signature[1], header->signature[2], header->signature[3]);
         if(!memcmp(header->signature, signature, 4)){
             printf("acpi: Found table with signature '{cccc}'{n}", signature[0], signature[1], signature[2], signature[3]);
             return (void*)header;

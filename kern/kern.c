@@ -11,6 +11,7 @@
 #include "sys/idt/idt.h"
 #include "sys/acpi/acpi.h"
 #include "sys/acpi/apic.h"
+#include "sys/keyboard/ps2.h"
  
 static volatile struct limine_framebuffer_request framebuffer_request = {
     .id = LIMINE_FRAMEBUFFER_REQUEST,
@@ -55,16 +56,9 @@ void _start(void) {
     idt_init();
     log_success("IDT loaded!");
     printf("Hi!{n}");
-    //printf("{dn}", 10);
-    //asm("int $0x3");
-    printf("epic win: {xn}", 394949334);
     init_acpi();
-    printf("hi1");
-    apic_sleep(1);
-    printf("hi2");
+    //ps2_init();
     // We're done, just hang...
     hcf();
-    
-    //asm("int $0x10");
 
 }

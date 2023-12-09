@@ -205,3 +205,6 @@ int acpi_table_checksum(xsdt_t *t);
 void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt);
 void init_acpi(void);
 void pmt_delay(size_t us);
+fadt_t *fetch_fadt();
+
+

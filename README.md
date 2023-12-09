@@ -11,4 +11,7 @@ cool x86_64 kernel designed for bird
 - [ ] Shell
 - [ ] Memory manager
 
+
+
+
  

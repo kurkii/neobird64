@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "io.h"
+#include "../sys/acpi/apic.h"
 uint64_t rdmsr(uint64_t msr)
 {
 	uint32_t low, high;
@@ -49,4 +50,8 @@ uint32_t inl(uint16_t port)
                    : "Nd"(port)
                    : "memory");
     return ret;
+}
+
+void sleep(int ms){
+    apic_sleep(ms);
 }

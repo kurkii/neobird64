@@ -7,6 +7,7 @@
 #include <log.h>
 #include "../idt/idt.h"
 #include "../pic/pic.h"
+#include "../keyboard/ps2.h"
 
 #define LAPIC_ID_REG        0x20            // lapic id register
 #define LAPIC_VERSION_REG   0x30            // lapic version register
@@ -108,12 +109,14 @@ void ioapic_configure_entry(uint64_t* addr, uint8_t reg, uint64_t val){
 }
 
 void ioapic_init(){
+    asm("cli");
     int max_entries = (ioapic_read(ioapic_address, IOAPICVER_REG) >> 16) & 0xFF;
     for(int i = 0; i != max_entries; i++){                                           // mask all the pins
-        ioapic_configure_entry(ioapic_address, IOAPICREDTBL_REG(i), 1 << 16);
+        ioapic_configure_entry(ioapic_address, i, 1 << 16);
     }
-
+    asm("sti");
     ps2_int_init();
+    
 }
 
 int find_gsi(int legacy_pin){
@@ -130,10 +133,15 @@ int find_gsi(int legacy_pin){
     return legacy_pin; // we didnt find anything, meaning that legacy_pin == gsi   
 }
 void ps2_int_init(){
+    
     // find the pin to which the keyboard is set (legacy IRQ 1)
     int gsi = find_gsi(1);
-    ioapic_write(ioapic_address, IOAPICREDTBL_REG(gsi), 0 << 16);           // unmask
-    ioapic_write(ioapic_address, IOAPICREDTBL_REG(gsi), 33);                // set vector to 33
+
+    ps2_init();
+
+    ioapic_configure_entry(ioapic_address, gsi, 0 << 16);           // unmask
+    ioapic_configure_entry(ioapic_address, gsi, 33);                // set vector to 33
+
 
 }
 
@@ -223,8 +231,10 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     calibrate_timer(madt);
     
     // initalize IOAPIC
-    ioapic_init();
+    
     asm("sti");
+
+    ioapic_init();
 
     log_success("LAPIC initialized");
 }
