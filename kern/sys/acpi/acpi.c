@@ -22,7 +22,7 @@ static volatile struct limine_hhdm_request hhdm_request = {
     .revision = 0
 };
 
-
+////////////////////////////// Parsing functions //////////////////////////////
 
 xsdt_t *parse_xsdt(uint64_t hhdmoffset, rsdp_t *rsdp){
     if(!rsdp->xsdtaddress){
@@ -38,51 +38,14 @@ rsdt_t *parse_rsdt(uint64_t hhdmoffset, rsdp_t *rsdp){
     return (rsdt_t*)(rsdp->rsdtaddress + hhdmoffset);
 }
 
-void pmt_delay(size_t us){
-    if(fadt->PMTimerLength != 4){
-        log_panic("ACPI Timer unavailable"); // panic for now
-    }
-    uint64_t* addr = (uint64_t*)fadt->X_PMTimerBlock.Address;
-    size_t count = inl(fadt->PMTimerBlock);
-    size_t target = (us*PMT_TIMER_RATE)/1000000;
-    size_t current = 0;
-
-    while (current < target) {
-        current = ((inl(fadt->PMTimerBlock) - count) & 0xffffff);
-    }
-    
-
-}
-
 fadt_t *fetch_fadt(){
     return find_acpi_table("FACP", rsdt, xsdt);
 }
 
-void init_acpi(void){
-    hhdmoffset = hhdm_request.response->offset;
-    rsdp_t *rsdp = (rsdp_t*)rsdp_request.response->address;
-
-    rsdt = parse_rsdt(hhdmoffset, rsdp);
-    xsdt = parse_xsdt(hhdmoffset, rsdp);
-
-    madt_t *madt = find_acpi_table("APIC", rsdt, xsdt);       // APIC - signature of MADT table
-
-    if(madt == NULL){
-        log_panic("MADT table not found, hanging");
-    }
-
-    fadt = find_acpi_table("FACP", rsdt, xsdt);
-
-    if(fadt == NULL){
-       log_panic("FADT table not found, hanging");
-    }
-
-    printf("{x}", hhdmoffset);
-    init_apic(madt, hhdmoffset);
 
 
     
-}
+
 
 void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt){
     int usexsdt;
@@ -119,5 +82,48 @@ void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt){
             
     printf("acpi: Table '{s}' not found.{n}", signature);
     return NULL;  
+}
+
+////////////////////////////// Initialization functions //////////////////////////////
+
+void init_acpi(void){
+    hhdmoffset = hhdm_request.response->offset;
+    rsdp_t *rsdp = (rsdp_t*)rsdp_request.response->address;
+
+    rsdt = parse_rsdt(hhdmoffset, rsdp);
+    xsdt = parse_xsdt(hhdmoffset, rsdp);
+
+    madt_t *madt = find_acpi_table("APIC", rsdt, xsdt);       // APIC - signature of MADT table
+
+    if(madt == NULL){
+        log_panic("MADT table not found, hanging");
+    }
+
+    fadt = find_acpi_table("FACP", rsdt, xsdt);
+
+    if(fadt == NULL){
+       log_panic("FADT table not found, hanging");
+    }
+
+    printf("{x}", hhdmoffset);
+    init_apic(madt, hhdmoffset);
+
+}
+
+////////////////////////////// ACPI Timer Delay //////////////////////////////
+
+void pmt_delay(size_t us){
+    if(fadt->PMTimerLength != 4){
+        log_panic("ACPI Timer unavailable"); // panic for now
+    }
+    uint64_t* addr = (uint64_t*)fadt->X_PMTimerBlock.Address;
+    size_t count = inl(fadt->PMTimerBlock);
+    size_t target = (us*PMT_TIMER_RATE)/1000000;
+    size_t current = 0;
+
+    while (current < target) {
+        current = ((inl(fadt->PMTimerBlock) - count) & 0xffffff);
+    }
+
 }
 

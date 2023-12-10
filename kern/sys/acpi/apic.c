@@ -44,13 +44,51 @@ uint64_t apic_timer_ticks;
 
 madt_ics_t ics_array[64];
 
-static volatile struct limine_smp_request smp_request = {
-    .id = LIMINE_SMP_REQUEST,
-    .revision = 0,
-    .flags = 0,
-};
+/////////////////////////////////////////////////////////////////////////
 
+uint64_t *get_madt_tables(madt_t *madt){
+    int i = 0;
+    madt_record_t *cur_ics = &madt->first_ics;
+    int length = madt->header.length - sizeof(madt_t) + 2;
+    while(length > 0){
+        switch(cur_ics->entry_type){
+            case 0:
+                ;
+                madt_plapic_t *plapic = (madt_plapic_t*)cur_ics;
+                if(plapic->flags == 0){
+                    break;
+                }else{
+                    printf("Found CPU: {dn}", plapic->apicID);
+                    ics_array[i].address = (uint64_t*)cur_ics;
+                    ics_array[i].type = cur_ics->entry_type;
+                    i++;
+                    break;
+                }
+                break;
+            case 1:
+                ;
+                madt_ioapic_t *ioapic = (madt_ioapic_t*)cur_ics;
+                
+                ics_array[i].address = (uint64_t*)cur_ics;
+                ics_array[i].type = cur_ics->entry_type;
+                i++;
 
+                ioapic_address = (uint64_t*)ioapic->ioapicaddr;
+                break;
+            case 2:
+                ;
+                ics_array[i].address = (uint64_t*)cur_ics;
+                ics_array[i].type = cur_ics->entry_type;
+                i++;
+                madt_iso_t *iso = (madt_iso_t*)cur_ics;
+                break;
+        }
+        length -= cur_ics->record_length;
+        cur_ics = (madt_record_t*)((void*)cur_ics+cur_ics->record_length);
+    } 
+}
+
+////////////////////////////// I/O functions //////////////////////////////
 int ioapic_read(void *ioapicaddr, uint8_t reg){
     uint32_t volatile *ioapicptr = (uint32_t volatile*) ioapicaddr;
     ioapicptr[0] = (reg & 0xFF);
@@ -77,8 +115,7 @@ void apic_write(void* apic_base, uint32_t reg, uint32_t data) {
     *((volatile uint32_t*)(apic_base + reg)) = data;
 }
 
-
-
+////////////////////////////// Interrupt Handling functions //////////////////////////////
 void apic_send_interrupt(void* apic_base, uint8_t apic, uint8_t vector) {
     apic_write(apic_base, LAPIC_ICR_HIGH, ((uint32_t)apic) << 24);
     apic_write(apic_base, LAPIC_ICR_LOW, vector);
@@ -96,11 +133,13 @@ void apic_sleep(int ms){
     }
 }
 
-
 void apic_timer(){
     apic_timer_ticks++;
     apic_eoi();
 }
+
+
+////////////////////////////// Initialization functions //////////////////////////////
 
 void ioapic_configure_entry(uint64_t* addr, uint8_t reg, uint64_t val){
     ioapic_write(addr, IOAPICREDTBL_REG(reg), (uint32_t)val);               // lower 32 bits   
@@ -145,59 +184,7 @@ void ps2_int_init(){
 
 }
 
-uint64_t *get_madt_tables(madt_t *madt){
-    int i = 0;
-    madt_record_t *cur_ics = &madt->first_ics;
-    int length = madt->header.length - sizeof(madt_t) + 2;
-    while(length > 0){
-        switch(cur_ics->entry_type){
-            case 0:
-                ;
-                madt_plapic_t *plapic = (madt_plapic_t*)cur_ics;
-                if(plapic->flags == 0){
-                    break;
-                }else{
-                    printf("Found CPU: {dn}", plapic->apicID);
-                    ics_array[i].address = (uint64_t*)cur_ics;
-                    ics_array[i].type = cur_ics->entry_type;
-                    i++;
-                    break;
-                }
-                break;
-            case 1:
-                
-                printf("IOAPIC: {dn}", cur_ics->record_length);
-                madt_ioapic_t *ioapic = (madt_ioapic_t*)cur_ics;
-                
-                ics_array[i].address = (uint64_t*)cur_ics;
-                ics_array[i].type = cur_ics->entry_type;
-                i++;
 
-                ioapic_address = (uint64_t*)ioapic->ioapicaddr;
-                printf("IOAPIC ID: {dn}", ioapic->ioapicID);
-
-                break;
-            case 2:
-                ;
-                ics_array[i].address = (uint64_t*)cur_ics;
-                ics_array[i].type = cur_ics->entry_type;
-                i++;
-                madt_iso_t *iso = (madt_iso_t*)cur_ics;
-                printf("ISO:{dn}", i);
-                printf("bus:{dn}", iso->bus);
-                printf("source:{dn}", iso->source);
-                printf("gsi:{dnn}", iso->gsi);
-                break;
-        }
-        //printf("length: {dn}", length);
-        length -= cur_ics->record_length;
-        cur_ics = (madt_record_t*)((void*)cur_ics+cur_ics->record_length);
-    } 
-}
-
-uint64_t get_lapic_base(){
-    return rdmsr(IA32_APIC_BASE_MSR);
-}
 
 void calibrate_timer(madt_t *madt){
     lapic_address = (uint32_t*)madt->lapicaddr;
@@ -227,13 +214,10 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     apic_write((void*)madt->lapicaddr, LAPIC_SIVR_REG, spurious_reg | (0x100)); // start recieving ints
 
     // initalize timer
-    //idt_set_gate(32, apic_timer, 0x8e);
     calibrate_timer(madt);
     
     // initalize IOAPIC
-    
     asm("sti");
-
     ioapic_init();
 
     log_success("LAPIC initialized");

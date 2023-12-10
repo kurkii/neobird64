@@ -36,7 +36,6 @@ struct flanterm_context *fb_init(){
 
 
 static void hcf(void) {
-    //asm ("cli");
     for (;;) {
         asm ("hlt");
     }
@@ -57,7 +56,6 @@ void _start(void) {
     log_success("IDT loaded!");
     printf("Hi!{n}");
     init_acpi();
-    //ps2_init();
     // We're done, just hang...
     hcf();
 

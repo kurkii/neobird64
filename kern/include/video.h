@@ -15,6 +15,7 @@ void print_char(struct flanterm_context *ft_ctx, char c);
 void print_str(struct flanterm_context *ft_ctx, char *str);
 void print_int(struct flanterm_context *ft_ctx, long i);
 void print_hex(struct flanterm_context *ft_ctx, long num);
+char toupper(char c);
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"

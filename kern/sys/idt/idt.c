@@ -161,7 +161,6 @@ void exception_handler(struct int_frame *r){
     }
 
     if(r->int_no == 33){
-        printf("{n}handler: OK{n}");
         ps2_interrupt();
     }
 }
