@@ -1,0 +1,1 @@
+#define NEOBIRD64_VERSION_MAJOR   "0.1"

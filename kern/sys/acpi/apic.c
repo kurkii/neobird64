@@ -129,7 +129,7 @@ void apic_eoi(){
 void apic_sleep(int ms){
     int curcnt = apic_timer_ticks;
     while (apic_timer_ticks - curcnt < ms) {
-        ;
+        asm("nop");
     }
 }
 
@@ -150,11 +150,11 @@ void ioapic_configure_entry(uint64_t* addr, uint8_t reg, uint64_t val){
 void ioapic_init(){
     asm("cli");
     int max_entries = (ioapic_read(ioapic_address, IOAPICVER_REG) >> 16) & 0xFF;
-    for(int i = 0; i != max_entries; i++){                                           // mask all the pins
+    for(int i = 0; i != max_entries; i++){                                           // mask all the pins, unnecessary with limine
         ioapic_configure_entry(ioapic_address, i, 1 << 16);
     }
+    log_success("IOAPIC initalized");
     asm("sti");
-    ps2_int_init();
     
 }
 
@@ -172,7 +172,7 @@ int find_gsi(int legacy_pin){
     return legacy_pin; // we didnt find anything, meaning that legacy_pin == gsi   
 }
 void ps2_int_init(){
-    
+    log_info("Initalizing PS/2 keyboard");
     // find the pin to which the keyboard is set (legacy IRQ 1)
     int gsi = find_gsi(1);
 
@@ -180,8 +180,8 @@ void ps2_int_init(){
 
     ioapic_configure_entry(ioapic_address, gsi, 0 << 16);           // unmask
     ioapic_configure_entry(ioapic_address, gsi, 33);                // set vector to 33
-
-
+    printf("ps2: configured IOAPIC redirection entry{n}");
+    log_success("PS/2 keyboard initalized");
 }
 
 
@@ -221,4 +221,6 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     ioapic_init();
 
     log_success("LAPIC initialized");
+    apic_sleep(10);
+    ps2_int_init();
 }

@@ -6,11 +6,17 @@ cool x86_64 kernel designed for bird
 
 - [x] IDT
 - [x] GDT
-- [ ] IOAPIC & LAPIC
-- [ ] Timer & keyboard support
+- [x] IOAPIC & LAPIC
+- [x] Timer & keyboard support
 - [ ] Shell
 - [ ] Memory manager
 
+# how to compile
+
+- edit makefile CC to fit your cross-compiler
+- `make`
+- there should now be a `neobird64.iso` file in `build/`
+- run iso with `qemu-system-x86_64 -d int -M smm=off build/neobird64.iso`
 
 
 

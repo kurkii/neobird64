@@ -101,8 +101,10 @@ void idt_init(void){
     idt_set_gate(29, s_isr29, 0x8E);
     idt_set_gate(30, s_isr30, 0x8E);
     idt_set_gate(31, s_isr31, 0x8E);
-    idt_set_gate(33, s_isr33, 0x8E);
-    idt_set_gate(172, s_isr172, 0x8E);
+
+
+    idt_set_gate(33, s_isr33, 0x8E);    // LAPIC Timer
+    idt_set_gate(172, s_isr172, 0x8E);  // PS/2 Keyboard
 
     idt_load();
 }
@@ -146,21 +148,44 @@ char *exception_messages[] =
     "Reserved"
 };
 
+void check_handlers(int vector){
+    switch(vector){
+        case 0xAC:
+            apic_timer();
+            break;
+        case 33:
+            printf("check_handlers{n}");
+            ps2_handler();
+            break;
+        default:
+            break;
+    }
+}
+
 void exception_handler(struct int_frame *r){
     if(r->int_no < 32){
-        printf("interrupt no. {d}: {snn}", r->int_no, exception_messages[r->int_no]);
+        printf("Oh no!{n}");
+        printf("               _.------.{n}");
+        printf("           _.-`    ('>.-`\"""-.{n}");
+        printf(" '.__.---'`       _'`   _ .--.){n}");
+        printf("        -'         '-.-';`   `           ----  \" You have gotten exception {d}, aka '{s}'. Below is a provided stack frame. \"{n}", r->int_no, exception_messages[r->int_no]);
+        printf("        ' -      _.'  ``'--. {n}");
+        printf("            '---`    .-'""`{n}");
+        printf("                   /`{n}");
+        printf("{n}");
+        printf("{n}");
         printf("rax {d} | rbx {d} | rcx {d} | rdx {dn}", r->rax, r->rbx, r->rcx, r->rdx);
         printf("rdi {d} | rsi 0x{x} | rbp 0x{xn}", r->rdi, r->rsi, r->rbp);
         printf("r8 {d} | r9 {d} | r10 {d} | r11 {d} | r12 {d} | r13 {d} | r14 {d} | r15 {dn}", r->r8, r->r9, r->r10, r->r11, r->r12, r->r13, r->r14, r->r15);
-        printf("rip 0x{x} | cs {d} | ss {d} | rsp 0x{x} | rflags 0x{xn}", r->rip, r->cs, r->ss, r->rsp, r->rflags);
+        printf("rip 0x{x} | cs 0x{x} | ss 0x{x} | rsp 0x{x} | rflags 0x{xn}", r->rip, r->cs, r->ss, r->rsp, r->rflags);
         __asm__ volatile ("cli; hlt"); // Completely hangs the computer
     }
-
-    if(r->int_no == 0xAC){               // apic timer
+    if(r->int_no == 0xAC){
         apic_timer();
     }
-
+    
     if(r->int_no == 33){
-        ps2_interrupt();
+        ps2_handler();
     }
+    return;
 }

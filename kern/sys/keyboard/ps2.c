@@ -2,24 +2,36 @@
 #include "../acpi/apic.h"
 #include "../acpi/apic.h"
 #include <io.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <video.h>
 
-#define PS2_DATA_PORT   0x60
-#define PS2_STATUS_REG  0x64
-#define PS2_COMMAND_REG 0x64
+#define PS2_DATA_PORT       0x60
+#define PS2_STATUS_REG      0x64
+#define PS2_COMMAND_REG     0x64
 
-#define NORMAL_STATE    0
-#define SHIFT_STATE     1
+#define NORMAL_STATE        0x00
+#define SHIFT_STATE         0x01
+#define CAPS_STATE          0x02
+
+#define LEFT_SHIFT_PRESSED  0x2A
+#define LEFT_SHIFT_RELEASED 0xAA
+
+#define CAPS_LOCK_PRESSED   0x3A
+#define CAPS_LOCK_RELEASED  0xBA
+
+#define BACKSPACE_PRESSED   0x0E
+#define BACKSPACE_RELEASED  0x8E
 
 int keyboard_state = NORMAL_STATE;
 
 void ps2_init(){
+    printf("ps2: assuming US QWERTY layout, scan code 1. other layouts not supported{n}");
     outb(PS2_COMMAND_REG, 0xAE);
 }
 
 
-const char ascii_table[] = {
+const char ascii_table[] = {                // thanks poncho
         0 ,  0 , '1', '2',
     '3', '4', '5', '6',
     '7', '8', '9', '0',
@@ -37,23 +49,28 @@ const char ascii_table[] = {
         0 , ' '
 };
 
-char ps2_translate_ascii(uint16_t scancode){
+char ps2_translate2ascii(uint16_t scancode){
     if(scancode > 0x58){
-        //printf("scancode not char{n}");
+        return 0;
+    } 
+
+    if(scancode == LEFT_SHIFT_PRESSED && keyboard_state != CAPS_STATE){
+        keyboard_state = SHIFT_STATE;
         return 0;
     }
 
-    if(scancode == 0x2A){
-        keyboard_state = SHIFT_STATE;
+    if(scancode == CAPS_LOCK_PRESSED && keyboard_state == NORMAL_STATE){
+        keyboard_state = CAPS_STATE;
+        return 0;
+    }else if(scancode == CAPS_LOCK_PRESSED && keyboard_state == SHIFT_STATE){
+        keyboard_state = CAPS_STATE;
+        return 0;
     }
-
     if(ascii_table[scancode] == 0){
-        //printf("scancode is 0{n}");
         return 0;
     }
     
-    if(keyboard_state == SHIFT_STATE){
-        //printf(" shift ");
+    if(keyboard_state == SHIFT_STATE || keyboard_state == CAPS_STATE){
         return toupper(ascii_table[scancode]);
     }else{
         return ascii_table[scancode];
@@ -61,20 +78,27 @@ char ps2_translate_ascii(uint16_t scancode){
 }
 
 
-void ps2_interrupt(){
-
+void ps2_handler(){
     uint16_t scancode = inb(PS2_DATA_PORT);
 
-    if (scancode == 0xAA) {
+    if (scancode == LEFT_SHIFT_RELEASED && keyboard_state != CAPS_STATE) { 
         keyboard_state = NORMAL_STATE;
     }
+
+    if(keyboard_state == CAPS_STATE && scancode == CAPS_LOCK_PRESSED){
+        keyboard_state = NORMAL_STATE;
+        apic_eoi();
+        return;
+    }
     
-    char character = ps2_translate_ascii(scancode);
+    char character = ps2_translate2ascii(scancode);
     if(character == NULL){
         apic_eoi();
         return;
     }
+
     printf("{c}", character);
+
     apic_eoi(); 
 
 }

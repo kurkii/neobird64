@@ -11,16 +11,13 @@ fadt_t *fadt;
 
 #define PMT_TIMER_RATE 3579545 // 3.57 MHz
 
-uint64_t hhdmoffset;
+extern uint64_t hhdmoffset;
+
 static volatile struct limine_rsdp_request rsdp_request = {
     .id = LIMINE_RSDP_REQUEST,
     .revision = 0
 };
 
-static volatile struct limine_hhdm_request hhdm_request = {
-    .id = LIMINE_HHDM_REQUEST,
-    .revision = 0
-};
 
 ////////////////////////////// Parsing functions //////////////////////////////
 
@@ -41,10 +38,6 @@ rsdt_t *parse_rsdt(uint64_t hhdmoffset, rsdp_t *rsdp){
 fadt_t *fetch_fadt(){
     return find_acpi_table("FACP", rsdt, xsdt);
 }
-
-
-
-    
 
 
 void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt){
@@ -87,7 +80,6 @@ void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt){
 ////////////////////////////// Initialization functions //////////////////////////////
 
 void init_acpi(void){
-    hhdmoffset = hhdm_request.response->offset;
     rsdp_t *rsdp = (rsdp_t*)rsdp_request.response->address;
 
     rsdt = parse_rsdt(hhdmoffset, rsdp);

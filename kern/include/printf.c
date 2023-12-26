@@ -70,7 +70,7 @@ int printf(const char *format_string, ...){
                         break;
                     case 'd':
                     case 'i':
-                        print_int(ft_ctx, va_arg(a_list, int));
+                        print_int(ft_ctx, va_arg(a_list, long long));
                         break;
                     case 's':
                         print_str(ft_ctx, va_arg(a_list, char*));
@@ -81,7 +81,7 @@ int printf(const char *format_string, ...){
                         print_char(ft_ctx, ch);
                         break;
                     case 'x':
-                        print_hex(ft_ctx, va_arg(a_list, uint32_t));
+                        print_hex(ft_ctx, va_arg(a_list, uint64_t));
                         break;
                     case 'l':
                         current++;

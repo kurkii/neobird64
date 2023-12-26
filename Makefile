@@ -61,6 +61,9 @@ all:
 
 	$(CC) -c $(KERN)/sys/keyboard/ps2.c -o $(BUILD_DIR)/ps2.o $(CFLAGS)
 
+	$(CC) -c $(KERN)/pmm/pmm.c -o $(BUILD_DIR)/pmm.o $(CFLAGS)
+
+
 	# link everything to an elf
 	amd64-elf-ld -o $(BUILD_DIR)/neobird64.elf  $(BUILD_DIR)/*.o $(LDFLAGS)
 
