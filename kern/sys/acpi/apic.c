@@ -142,8 +142,8 @@ void apic_timer(){
 ////////////////////////////// Initialization functions //////////////////////////////
 
 void ioapic_configure_entry(uint64_t* addr, uint8_t reg, uint64_t val){
-    ioapic_write(addr, IOAPICREDTBL_REG(reg), (uint32_t)val);               // lower 32 bits   
-    ioapic_write(addr, IOAPICREDTBL_REG(reg)+1, (uint32_t)(val >> 32));     // higher 32 bits
+    ioapic_write(addr, IOAPICREDTBL_REG(reg), (uint32_t)val);                       // lower 32 bits   
+    ioapic_write(addr, IOAPICREDTBL_REG(reg)+1, (uint32_t)(val >> 32));             // higher 32 bits
 
 }
 
@@ -159,7 +159,7 @@ void ioapic_init(){
 }
 
 int find_gsi(int legacy_pin){
-    for(int i = 0; i < 64; i++){
+    for(int i = 0; i < 64; i++){    // 64 is an arbitrary number
         if(ics_array[i].type == 2){
             madt_iso_t *iso = (madt_iso_t*)ics_array[i].address;
             if(iso->source == legacy_pin){                                              
@@ -173,8 +173,8 @@ int find_gsi(int legacy_pin){
 }
 void ps2_int_init(){
     log_info("Initalizing PS/2 keyboard");
-    // find the pin to which the keyboard is set (legacy IRQ 1)
-    int gsi = find_gsi(1);
+    
+    int gsi = find_gsi(1); // find the pin to which the keyboard is set (legacy IRQ 1)
 
     ps2_init();
 
@@ -216,11 +216,10 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     // initalize timer
     calibrate_timer(madt);
     
-    // initalize IOAPIC
     asm("sti");
+    // initalize IOAPIC
     ioapic_init();
 
     log_success("LAPIC initialized");
-    apic_sleep(10);
     ps2_int_init();
 }

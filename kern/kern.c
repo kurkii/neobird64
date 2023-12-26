@@ -55,6 +55,7 @@ uint64_t hhdmoffset;
 
 void _start(void) {
     ft_ctx = fb_init();
+    
     hhdmoffset = hhdm_request.response->offset;
     printf("{k}Welcome to Neobird64 v{skn}", ANSI_COLOR_CYAN, NEOBIRD64_VERSION_MAJOR, ANSI_COLOR_RESET);
     log_info("Loading GDT...");

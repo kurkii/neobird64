@@ -47,18 +47,11 @@ void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt){
     if(!xsdt){                                                      // checks if the XSDT is available
         usexsdt = 0;
         entries = (rsdt->header.length - sizeof(sdt_t))/ 4;
-/*         printf("acpi: using the RSDT{n}");
-        printf("acpi: revision: {dn}", rsdt->header.revision);
-        printf("acpi: OEMID: {sn}", rsdt->header.OEMID); */
     }else{
         usexsdt = 1;
         entries = (xsdt->header.length - sizeof(sdt_t))/ 8;
-/*         printf("acpi: using the XSDT{n}");
-        printf("acpi: revision: {dn}", xsdt->header.revision);
-        printf("acpi: OEMID: {ccccccn}", xsdt->header.OEMID[0], xsdt->header.OEMID[1], xsdt->header.OEMID[2], xsdt->header.OEMID[3], xsdt->header.OEMID[4], xsdt->header.OEMID[5]); */
     }
 
-/*     printf("acpi: ACPI entries: {dn}", entries); */
     for(int i = 0; i < entries; i++){
         sdt_t *header;
         if(usexsdt == 0){
@@ -96,8 +89,7 @@ void init_acpi(void){
     if(fadt == NULL){
        log_panic("FADT table not found, hanging");
     }
-
-    printf("{x}", hhdmoffset);
+    
     init_apic(madt, hhdmoffset);
 
 }
