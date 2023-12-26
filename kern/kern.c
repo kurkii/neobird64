@@ -70,8 +70,6 @@ void _start(void) {
     log_info("Initalizing ACPI and APIC..."); 
     init_acpi();
     printf("Done!{n}");
-    printf("block count: ");
-    print_hex(ft_ctx, 2151506944/8);
     // We're done, just hang...
     hcf();
 
