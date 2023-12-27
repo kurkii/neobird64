@@ -46,6 +46,7 @@ all:
 	$(CC) -c $(KERN)/flanterm/flanterm.c -o $(BUILD_DIR)/flanterm.o $(CFLAGS)
 	$(CC) -c $(KERN)/flanterm/backends/fb.c -o $(BUILD_DIR)/fb.o $(CFLAGS)
 	$(CC) -c $(KERN)/include/io.c -o $(BUILD_DIR)/io.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/neobird64.c -o $(BUILD_DIR)/neobird64.o $(CFLAGS)
 
 	$(CC) -c $(KERN)/include/string.c -o $(BUILD_DIR)/string.o $(CFLAGS)
 

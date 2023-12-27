@@ -8,8 +8,6 @@
 
 
 #define BLOCK_SIZE      4096      // 4kib block sizes, cause of paging or whatever the fuck
-#define BLOCKS_PER_BYTE 8
-#define BITMAP_START    0xAE5
 
 static volatile struct limine_memmap_request memmap_request = {
     .id = LIMINE_MEMMAP_REQUEST,
@@ -68,22 +66,29 @@ int find_free_block(void){
 	return -1;
 }
 
-void get_mem_size(struct limine_memmap_entry **entries){
-    for(int i = 0; i < memmap_entry_count; i++){
+void pmm_init(){
+
+    if(memmap_request.response == NULL){
+        log_panic("Memory map not recieved, halting");
+    }
+    
+    memmap = memmap_request.response;
+    struct limine_memmap_entry **entries = memmap->entries;
+    memmap_entry_count = memmap->entry_count;
+
+    for(int i = 0; i < memmap_entry_count; i++){  // parse memory size
         switch(entries[i]->type){
             case LIMINE_MEMMAP_USABLE:
                 mem_size += entries[i]->length;
                 break;
         }
     }
-}
 
-void parse_memmap(struct limine_memmap_entry **entries){
     int usable_found = 0;
-    for(int i = 0; i < memmap_entry_count; i++){
+    for(int i = 0; i < memmap_entry_count; i++){    // parse memmap
         switch (entries[i]->type) {
             case LIMINE_MEMMAP_USABLE:
-                if(usable_found == 0 && entries[i]->length > get_block_count()/BLOCKS_PER_BYTE){
+                if(usable_found == 0 && entries[i]->length > get_block_count()/8){
                     usable_addr = entries[i]->base;
                     usable_top = usable_addr + entries[i]->length;
                     usable_found = 1;
@@ -101,31 +106,17 @@ void parse_memmap(struct limine_memmap_entry **entries){
         printf("pmm: no suitable memory to place the bitmap{n}");
         log_panic("Not enough memory, halting.");
     }
-}
-
-void pmm_init(){
-
-    if(memmap_request.response == NULL){
-        log_panic("Memory map not recieved, halting");
-    }
-    
-    memmap = memmap_request.response;
-    struct limine_memmap_entry **entries = memmap->entries;
-    memmap_entry_count = memmap->entry_count;
-
-    get_mem_size(entries);      // writes size of memory into mem_size 
-    parse_memmap(entries);      
 
     free_blocks = (usable_top / BLOCK_SIZE) * 8;
-    block_count = mem_size/8;
+    block_count = mem_size/BLOCK_SIZE;
 
-    printf("pmm: memsize: {d}MB{n}", mem_size/1000000);
-    printf("pmm: block count: {d}KB{n}", (block_count)/1000);
-    printf("pmm: size of bitmap: {d}KB{n}", (block_count/8)/1000);
+    printf("pmm: memsize: {d}MiB{n}", mem_size/1048576);
+    printf("pmm: block count: {d}{n}", (block_count));
+    printf("pmm: size of bitmap: {d}KiB{n}", (block_count/8)/1024);
 
     printf("pmm: placing bitmap at 0x{xn}", usable_addr);
     bitmap = (uint64_t*)(usable_addr+hhdmoffset);
-    memset(bitmap, 0xFF, block_count/8);
+    memset(bitmap, 0xFF, block_count/8);    // set the entire bitmap as used
 
     for(uint64_t i = 0; i < memmap_entry_count; i++){   // set usable blocks in the bitmap
         switch (entries[i]->type) {
@@ -136,4 +127,8 @@ void pmm_init(){
         }
     }
 
+}
+
+uint64_t fetch_mem(){
+    return mem_size;
 }

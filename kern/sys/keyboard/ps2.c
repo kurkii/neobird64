@@ -26,8 +26,18 @@
 int keyboard_state = NORMAL_STATE;
 
 void ps2_init(){
+    outb(PS2_COMMAND_REG, 0xAD);
+    inb(PS2_STATUS_REG);
+    outb(PS2_COMMAND_REG, 0xA7);
     printf("ps2: assuming US QWERTY layout, scan code 1. other layouts not supported{n}");
+    uint8_t j = 1;
+    while(j != 0){
+        inb(PS2_DATA_PORT);
+        j = (inb(PS2_STATUS_REG)>>1) & 1;
+
+    }
     outb(PS2_COMMAND_REG, 0xAE);
+    
 }
 
 

@@ -58,7 +58,7 @@ uint64_t *get_madt_tables(madt_t *madt){
                 if(plapic->flags == 0){
                     break;
                 }else{
-                    printf("Found CPU: {dn}", plapic->apicID);
+                    printf("apic: Found CPU: {dn}", plapic->apicID);
                     ics_array[i].address = (uint64_t*)cur_ics;
                     ics_array[i].type = cur_ics->entry_type;
                     i++;
@@ -163,7 +163,7 @@ int find_gsi(int legacy_pin){
         if(ics_array[i].type == 2){
             madt_iso_t *iso = (madt_iso_t*)ics_array[i].address;
             if(iso->source == legacy_pin){                                              
-                printf("Found legacy pin: {d}, which is connected to IOAPIC pin: {dn}", legacy_pin, iso->gsi);
+                printf("apic: Found legacy pin: {d}, which is connected to IOAPIC pin: {dn}", legacy_pin, iso->gsi);
                 return iso->gsi;                                          
             }
         }
@@ -206,8 +206,8 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     get_madt_tables(madt);
 
     // initialize LAPIC
-    printf("acpi: MADT tables listed through{n}");
-    printf("acpi: writing to SIV register{n}");
+    printf("apic: MADT tables listed through{n}");
+    printf("apic: writing to SIV register{n}");
     uint64_t lapic_address = madt->lapicaddr;
     uint32_t spurious_reg = apic_read((void*)madt->lapicaddr, LAPIC_SIVR_REG);
     

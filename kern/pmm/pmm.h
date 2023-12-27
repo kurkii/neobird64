@@ -12,3 +12,4 @@
 #define LIMINE_MEMMAP_FRAMEBUFFER            7
 
 void pmm_init();
+uint64_t fetch_mem();
