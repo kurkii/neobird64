@@ -2,6 +2,7 @@
 #include "../acpi/apic.h"
 #include "../acpi/apic.h"
 #include <io.h>
+#include <log.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <video.h>
@@ -26,17 +27,31 @@
 int keyboard_state = NORMAL_STATE;
 
 void ps2_init(){
-    outb(PS2_COMMAND_REG, 0xAD);
-    inb(PS2_STATUS_REG);
-    outb(PS2_COMMAND_REG, 0xA7);
-    printf("ps2: assuming US QWERTY layout, scan code 1. other layouts not supported{n}");
-    uint8_t j = 1;
-    while(j != 0){
+    outb(PS2_COMMAND_REG, 0xAD);    // disable 1st port
+    outb(PS2_COMMAND_REG, 0xA7);    // disable 2nd port
+
+    uint16_t j = 1;
+    while(j != 0){  // clear buffer
         inb(PS2_DATA_PORT);
         j = (inb(PS2_STATUS_REG)>>1) & 1;
 
     }
-    outb(PS2_COMMAND_REG, 0xAE);
+
+    printf("ps2: starting PS/2 controller test{n}");
+    outb(PS2_COMMAND_REG, 0xAA);    // test ps/2 controller
+    uint16_t data = inb(PS2_DATA_PORT);
+    if(data == 0x55){
+        printf("ps2: PS/2 controller test passed{n}");
+    }else if(data == 0xFC){
+        log_err("PS/2 controller test failed");
+        printf("ps2: test failed, the PS/2 keyboard might not work.{n}");
+    }else{
+        printf("ps2: unexpected reply for test: '0x{x}'{n}", data);
+    }
+
+    printf("ps2: assuming US QWERTY layout, scan code 1. other layouts not supported{n}");
+
+    outb(PS2_COMMAND_REG, 0xAE);    // enable 1st port
     
 }
 
@@ -102,7 +117,7 @@ void ps2_handler(){
     }
     
     char character = ps2_translate2ascii(scancode);
-    if(character == NULL){
+    if(character == 0){
         apic_eoi();
         return;
     }

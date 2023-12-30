@@ -6,7 +6,6 @@
 #include <video.h>
 #include "pmm.h"
 
-
 #define BLOCK_SIZE      4096      // 4kib block sizes, cause of paging or whatever the fuck
 
 static volatile struct limine_memmap_request memmap_request = {

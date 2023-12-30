@@ -148,20 +148,6 @@ char *exception_messages[] =
     "Reserved"
 };
 
-void check_handlers(int vector){
-    switch(vector){
-        case 0xAC:
-            apic_timer();
-            break;
-        case 33:
-            printf("check_handlers{n}");
-            ps2_handler();
-            break;
-        default:
-            break;
-    }
-}
-
 void exception_handler(struct int_frame *r){
     if(r->int_no < 32){
         printf("Oh no!{n}");
