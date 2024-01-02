@@ -54,16 +54,27 @@ uint64_t bit2block(uint64_t bit){
 }
 
 int find_free_block(void){
-	for (uint8_t i = 0; i < get_block_count() / 8; i++) // find first free block
+	for (uint64_t i = 0; i < get_block_count() / 8; i++) // find first free block
 		if (bitmap[i] != 0xff)                          // if it isnt all set
 			for (int j = 0; j < 8; j++) {		        // loop through the uint8
 				int bit = 1 << j;                       // move 1 to specific bit
 				if (!(bitmap[i] & bit) )                // compare bit and bitmap bit
-					return i*8+j;                       // i = bit, so bit*8 = byte in memory +j i dont fully get but whatever
+					return i*8+j;                       // i = bit, so bit*8 = byte in memory +j
 			}
  
 	return -1;
 }
+
+uint64_t alloc_block(){
+    int block = find_free_block();
+    mmap_set(block);
+    return block * BLOCK_SIZE;
+}
+
+uint64_t alloc_blocks(uint64_t num){ // to be done
+
+}
+
 
 void pmm_init(){
 
@@ -75,7 +86,7 @@ void pmm_init(){
     struct limine_memmap_entry **entries = memmap->entries;
     memmap_entry_count = memmap->entry_count;
 
-    for(int i = 0; i < memmap_entry_count; i++){  // parse memory size
+    for(int i = 0; i < memmap_entry_count; i++){  // fetch memory size
         switch(entries[i]->type){
             case LIMINE_MEMMAP_USABLE:
                 mem_size += entries[i]->length;
@@ -98,7 +109,7 @@ void pmm_init(){
             default:
                 printf("pmm: type={d}, base=0x{x}, length=0x{xn}", entries[i]->type, entries[i]->base, entries[i]->length);
                 break;
-        }
+        };
     }
 
     if(usable_found == 0){
@@ -114,16 +125,20 @@ void pmm_init(){
     printf("pmm: size of bitmap: {d}KiB{n}", (block_count/8)/1024);
 
     printf("pmm: placing bitmap at 0x{xn}", usable_addr);
-    bitmap = (uint64_t*)(usable_addr+hhdmoffset);
+    bitmap = (uint8_t*)(usable_addr+hhdmoffset);
     memset(bitmap, 0xFF, block_count/8);    // set the entire bitmap as used
 
     for(uint64_t i = 0; i < memmap_entry_count; i++){   // set usable blocks in the bitmap
         switch (entries[i]->type) {
             case (LIMINE_MEMMAP_USABLE):
                 for(uint64_t j = 0; j < entries[i]->length; j += BLOCK_SIZE){
-                    mmap_unset(addr2block((entries[i]->base+j) / BLOCK_SIZE));
+                    mmap_unset(addr2block((entries[i]->base+j)));
                 }
         }
+    }
+
+    for(int i = 0; i < block_count/8; i++){     // mark the space used by the bitmap as used
+        mmap_set(addr2block(usable_addr)+i);
     }
 
 }
