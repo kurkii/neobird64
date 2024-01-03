@@ -46,7 +46,7 @@ madt_ics_t ics_array[64];
 
 /////////////////////////////////////////////////////////////////////////
 
-uint64_t *get_madt_tables(madt_t *madt){
+void get_madt_tables(madt_t *madt){
     int i = 0;
     madt_record_t *cur_ics = &madt->first_ics;
     int length = madt->header.length - sizeof(madt_t) + 2;
@@ -80,7 +80,6 @@ uint64_t *get_madt_tables(madt_t *madt){
                 ics_array[i].address = (uint64_t*)cur_ics;
                 ics_array[i].type = cur_ics->entry_type;
                 i++;
-                madt_iso_t *iso = (madt_iso_t*)cur_ics;
                 break;
         }
         length -= cur_ics->record_length;
@@ -147,17 +146,6 @@ void ioapic_configure_entry(uint64_t* addr, uint8_t reg, uint64_t val){
 
 }
 
-void ioapic_init(){
-    asm("cli");
-    int max_entries = (ioapic_read(ioapic_address, IOAPICVER_REG) >> 16) & 0xFF;
-    for(int i = 0; i != max_entries; i++){                                           // mask all the pins, unnecessary with limine
-        ioapic_configure_entry(ioapic_address, i, 1 << 16);
-    }
-    log_success("IOAPIC initalized");
-    asm("sti");
-    
-}
-
 int find_gsi(int legacy_pin){
     for(int i = 0; i < 64; i++){    // 64 is an arbitrary number
         if(ics_array[i].type == 2){
@@ -208,7 +196,6 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     // initialize LAPIC
     printf("apic: MADT tables listed through{n}");
     printf("apic: writing to SIV register{n}");
-    uint64_t lapic_address = madt->lapicaddr;
     uint32_t spurious_reg = apic_read((void*)madt->lapicaddr, LAPIC_SIVR_REG);
     
     apic_write((void*)madt->lapicaddr, LAPIC_SIVR_REG, spurious_reg | (0x100)); // start recieving ints
@@ -216,10 +203,13 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     // initalize timer
     calibrate_timer(madt);
     
-    asm("sti");
     // initalize IOAPIC
-    ioapic_init();
+    for(int i = 0; i != ((ioapic_read(ioapic_address, IOAPICVER_REG) >> 16) & 0xFF); i++){  // mask all the pins, unnecessary with limine
+        ioapic_configure_entry(ioapic_address, i, 1 << 16);
+    }
 
-    log_success("LAPIC initialized");
+    log_success("IOAPIC initalized");
+    log_success("LAPICs initialized");
+    asm("sti");
     ps2_int_init();
 }

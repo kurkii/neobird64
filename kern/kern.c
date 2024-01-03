@@ -14,7 +14,7 @@
 #include "sys/acpi/acpi.h"
 #include "sys/acpi/apic.h"
 #include "sys/keyboard/ps2.h"
-#include "pmm/pmm.h"
+#include "mm/pmm.h"
  
 static volatile struct limine_framebuffer_request framebuffer_request = {
     .id = LIMINE_FRAMEBUFFER_REQUEST,

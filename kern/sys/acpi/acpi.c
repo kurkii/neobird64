@@ -4,6 +4,7 @@
 #include <log.h>
 #include <stdio.h>
 #include <string.h>
+#include <io.h>
 
 rsdt_t *rsdt;
 xsdt_t *xsdt;
@@ -100,7 +101,7 @@ void pmt_delay(size_t us){
     if(fadt->PMTimerLength != 4){
         log_panic("ACPI Timer unavailable"); // panic for now
     }
-    uint64_t* addr = (uint64_t*)fadt->X_PMTimerBlock.Address;
+    
     size_t count = inl(fadt->PMTimerBlock);
     size_t target = (us*PMT_TIMER_RATE)/1000000;
     size_t current = 0;

@@ -1,4 +1,4 @@
-#include "../include/limine.h"
+#include <limine.h>
 #include <stdio.h>
 #include <log.h>
 #include <stdbool.h>
@@ -24,21 +24,16 @@ uint8_t *bitmap             = 0;        // we are doing a bitmap allocator
 struct limine_memmap_response *memmap;
 extern uint64_t hhdmoffset;
 
-void mmap_set (int bit) {
+void mmap_set(int bit){
     bitmap[bit/8] |= (1 << (bit%8));
 }
 
-bool mmap_test (int bit) {
+bool mmap_test(int bit){
     return bitmap[bit/8] &  (1 << (bit%8));
 }
 
-void mmap_unset (int bit) {
+void mmap_unset(int bit){
     bitmap[bit / 8] &= ~ (1 << (bit % 8));
-}
-
-
-uint64_t get_block_count(){
-    return mem_size;
 }
 
 uint64_t addr2block(uint64_t addr){
@@ -49,12 +44,8 @@ uint64_t block2addr(uint64_t block){
     return block * BLOCK_SIZE;
 }
 
-uint64_t bit2block(uint64_t bit){
-    return (bit/8) / BLOCK_SIZE;
-}
-
 int find_free_block(void){
-	for (uint64_t i = 0; i < get_block_count() / 8; i++) // find first free block
+	for (uint64_t i = 0; i < block_count / 8; i++)      // find first free block
 		if (bitmap[i] != 0xff)                          // if it isnt all set
 			for (int j = 0; j < 8; j++) {		        // loop through the uint8
 				int bit = 1 << j;                       // move 1 to specific bit
@@ -71,10 +62,9 @@ uint64_t alloc_block(){
     return block * BLOCK_SIZE;
 }
 
-uint64_t alloc_blocks(uint64_t num){ // to be done
-
+void dealloc_block(uint64_t block){
+    mmap_unset(block);
 }
-
 
 void pmm_init(){
 
@@ -98,7 +88,7 @@ void pmm_init(){
     for(int i = 0; i < memmap_entry_count; i++){    // parse memmap
         switch (entries[i]->type) {
             case LIMINE_MEMMAP_USABLE:
-                if(usable_found == 0 && entries[i]->length > get_block_count()/8){
+                if(usable_found == 0){
                     usable_addr = entries[i]->base;
                     usable_top = usable_addr + entries[i]->length;
                     usable_found = 1;

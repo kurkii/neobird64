@@ -1,4 +1,4 @@
-BUILD_DIR = build
+BUILD_DIR=build
 KERN = kern
 CC = amd64-elf-gcc
 AC = nasm
@@ -62,7 +62,7 @@ all:
 
 	$(CC) -c $(KERN)/sys/keyboard/ps2.c -o $(BUILD_DIR)/ps2.o $(CFLAGS)
 
-	$(CC) -c $(KERN)/pmm/pmm.c -o $(BUILD_DIR)/pmm.o $(CFLAGS)
+	$(CC) -c $(KERN)/mm/pmm.c -o $(BUILD_DIR)/pmm.o $(CFLAGS)
 
 
 	# link everything to an elf
