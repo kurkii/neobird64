@@ -33,6 +33,7 @@ rsdt_t *parse_rsdt(uint64_t hhdmoffset, rsdp_t *rsdp){
     if(!rsdp->rsdtaddress){
         return NULL;
     }
+    printf("rsdp->rsdt")
     return (rsdt_t*)(rsdp->rsdtaddress + hhdmoffset);
 }
 
@@ -47,15 +48,20 @@ void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt){
     printf("acpi: looking for table with signature '{cccc}'{n}", signature[0], signature[1], signature[2], signature[3]);
     if(!xsdt){                                                      // checks if the XSDT is available
         usexsdt = 0;
+        printf("br1");
+        printf("rsdt->header.length: 0x{xn}", rsdt->header.length);
+        printf("sizeof(sdt_t): 0x{xn}", sizeof(sdt_t));
         entries = (rsdt->header.length - sizeof(sdt_t))/ 4;
     }else{
         usexsdt = 1;
+        printf("br2");
         entries = (xsdt->header.length - sizeof(sdt_t))/ 8;
     }
-
+    printf("test1{n}");
     for(int i = 0; i < entries; i++){
         sdt_t *header;
         if(usexsdt == 0){
+            printf("test2{n}");
             header = (sdt_t*)rsdt->tableptrs[i];
         }else{
             header = (sdt_t*)xsdt->tableptrs[i];
@@ -74,10 +80,24 @@ void *find_acpi_table(char signature[4], rsdt_t *rsdt, xsdt_t *xsdt){
 ////////////////////////////// Initialization functions //////////////////////////////
 
 void init_acpi(void){
+
+    if(rsdp_request.response == NULL){
+        printf("null responmse");
+    }
+
     rsdp_t *rsdp = (rsdp_t*)rsdp_request.response->address;
 
+    printf("rsdp: 0x{x}", (uint64_t)rsdp_request.response->address);
+
+
     rsdt = parse_rsdt(hhdmoffset, rsdp);
+    if(rsdt == NULL){
+        printf("yea its null");
+    }
     xsdt = parse_xsdt(hhdmoffset, rsdp);
+    if(rsdt == NULL){
+        printf("xsdt its null");
+    }
 
     madt_t *madt = find_acpi_table("APIC", rsdt, xsdt);       // APIC - signature of MADT table
 

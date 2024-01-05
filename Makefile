@@ -19,6 +19,8 @@ CFLAGS += -Wall \
     -mno-red-zone \
 	-I kern/include \
 	-O0
+
+CDEBUG = -g
 LDFLAGS += -m elf_x86_64 \
     -nostdlib \
     -static \
@@ -99,28 +101,33 @@ debug:
 	# build & link boot and kernel files
 
 
-	$(CC) -c $(KERN)/kern.c -g -o $(BUILD_DIR)/kern.o $(CFLAGS) 
+	$(CC) -c $(KERN)/kern.c -o $(BUILD_DIR)/kern.o $(CFLAGS) $(CDEBUG)
 
-	$(CC) -c $(KERN)/include/video.c -g -o $(BUILD_DIR)/video.o $(CFLAGS)
-	$(CC) -c $(KERN)/include/printf.c -g -o $(BUILD_DIR)/printf.o $(CFLAGS)
-	$(CC) -c $(KERN)/include/log.c -g -o $(BUILD_DIR)/log.o $(CFLAGS)
-	$(CC) -c $(KERN)/flanterm/flanterm.c -g -o $(BUILD_DIR)/flanterm.o $(CFLAGS)
-	$(CC) -c $(KERN)/flanterm/backends/fb.c -g -o $(BUILD_DIR)/fb.o $(CFLAGS)
-	$(CC) -c $(KERN)/include/io.c -g -o $(BUILD_DIR)/io.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/video.c -o $(BUILD_DIR)/video.o $(CFLAGS) $(CDEBUG)
+	$(CC) -c $(KERN)/include/printf.c -o $(BUILD_DIR)/printf.o $(CFLAGS) $(CDEBUG)
+	$(CC) -c $(KERN)/include/log.c -o $(BUILD_DIR)/log.o $(CFLAGS) $(CDEBUG)
+	$(CC) -c $(KERN)/flanterm/flanterm.c -o $(BUILD_DIR)/flanterm.o $(CFLAGS) $(CDEBUG)
+	$(CC) -c $(KERN)/flanterm/backends/fb.c -o $(BUILD_DIR)/fb.o $(CFLAGS) $(CDEBUG)
+	$(CC) -c $(KERN)/include/io.c -o $(BUILD_DIR)/io.o $(CFLAGS) $(CDEBUG)
+	$(CC) -c $(KERN)/include/neobird64.c -o $(BUILD_DIR)/neobird64.o $(CFLAGS) $(CDEBUG)
 
-	$(CC) -c $(KERN)/include/string.c -g -o $(BUILD_DIR)/string.o $(CFLAGS)
+	$(CC) -c $(KERN)/include/string.c -o $(BUILD_DIR)/string.o $(CFLAGS) $(CDEBUG)
 
-	$(CC) -c $(KERN)/sys/gdt/gdt.c -g -o $(BUILD_DIR)/gdt.o $(CFLAGS)
-	$(AC) 	 		 $(KERN)/sys/gdt/gdt.asm -g -o $(BUILD_DIR)/gdt_asm.o $(NASMFLAGS)
+	$(CC) -c $(KERN)/sys/gdt/gdt.c -o $(BUILD_DIR)/gdt.o $(CFLAGS) $(CDEBUG)
+	$(AC) 	 $(KERN)/sys/gdt/gdt.asm -o $(BUILD_DIR)/gdt_asm.o $(NASMFLAGS)
 
-	$(CC) -c $(KERN)/sys/idt/idt.c -g -o $(BUILD_DIR)/idt.o $(CFLAGS)
-	$(AC) 	 		 $(KERN)/sys/idt/idt.asm -g -o $(BUILD_DIR)/idt_asm.o $(NASMFLAGS)
+	$(CC) -c $(KERN)/sys/idt/idt.c -o $(BUILD_DIR)/idt.o $(CFLAGS) $(CDEBUG)
+	$(AC) 	 $(KERN)/sys/idt/idt.asm -o $(BUILD_DIR)/idt_asm.o $(NASMFLAGS)
 
-	$(CC) -c $(KERN)/sys/acpi/acpi.c -g -o $(BUILD_DIR)/acpi.o $(CFLAGS)
-	$(CC) -c $(KERN)/sys/acpi/apic.c -g -o $(BUILD_DIR)/apic.o $(CFLAGS)
-	
+	$(CC) -c $(KERN)/sys/acpi/acpi.c -o $(BUILD_DIR)/acpi.o $(CFLAGS) $(CDEBUG)
+	$(CC) -c $(KERN)/sys/acpi/apic.c -o $(BUILD_DIR)/apic.o $(CFLAGS) $(CDEBUG)
+	$(CC) -c $(KERN)/sys/pic/pit.c -o $(BUILD_DIR)/pit.o $(CFLAGS) $(CDEBUG)
 
-	amd64-elf-ld -o $(BUILD_DIR)/neobird64.elf  $(BUILD_DIR)/*.o $(LDFLAGS)
+	$(CC) -c $(KERN)/sys/keyboard/ps2.c -o $(BUILD_DIR)/ps2.o $(CFLAGS) $(CDEBUG)
+
+	$(CC) -c $(KERN)/mm/pmm.c -o $(BUILD_DIR)/pmm.o $(CFLAGS) $(CDEBUG)
+
+	amd64-elf-ld -o $(BUILD_DIR)/neobird64.elf  $(BUILD_DIR)/*.o $(LDFLAGS) $(CDEBUG)
 
 	objcopy --only-keep-debug $(BUILD_DIR)/neobird64.elf $(BUILD_DIR)/neobird64.debug
 

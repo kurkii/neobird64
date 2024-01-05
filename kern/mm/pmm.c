@@ -116,7 +116,9 @@ void pmm_init(){
 
     printf("pmm: placing bitmap at 0x{xn}", usable_addr);
     bitmap = (uint8_t*)(usable_addr+hhdmoffset);
+    printf("working1{n}");
     memset(bitmap, 0xFF, block_count/8);    // set the entire bitmap as used
+    printf("working2{n}");
 
     for(uint64_t i = 0; i < memmap_entry_count; i++){   // set usable blocks in the bitmap
         switch (entries[i]->type) {
@@ -127,9 +129,13 @@ void pmm_init(){
         }
     }
 
+    printf("working3{n}");
+
     for(int i = 0; i < block_count/8; i++){     // mark the space used by the bitmap as used
         mmap_set(addr2block(usable_addr)+i);
     }
+
+    printf("working4{n}");
 
 }
 
