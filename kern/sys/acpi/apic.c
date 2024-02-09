@@ -199,7 +199,7 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     uint32_t spurious_reg = apic_read((void*)madt->lapicaddr, LAPIC_SIVR_REG);
     
     apic_write((void*)madt->lapicaddr, LAPIC_SIVR_REG, spurious_reg | (0x100)); // start recieving ints
-
+    log_success("LAPICs initialized");
     // initalize timer
     calibrate_timer(madt);
     
@@ -208,8 +208,9 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
         ioapic_configure_entry(ioapic_address, i, 1 << 16);
     }
 
-    log_success("IOAPIC initalized");
-    log_success("LAPICs initialized");
+    
+    
     asm("sti");
     ps2_int_init();
+    log_success("IOAPIC initalized");
 }

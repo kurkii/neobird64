@@ -41,7 +41,7 @@ void gdt_init(){
     gdt_set_entry(3, 0, 0xFFFFF, 0xFA, 0xA);
     // ENTRY 4 - USER MODE DATA SEGMENT     - 0x20
     gdt_set_entry(4, 0, 0xFFFFF, 0xF2, 0xA);
-    // ENTRY 5 - TSS                        - 0x28
+    // ENTRY 5 - TSS                        - 0x28 (note: TSS takes up 2 GDT entries)
     gdt_set_entry(5, (uint64_t)&tss, sizeof(tss), 0x89, 0x0);
     
     s_setgdt(gdtr.limit_low, gdtr.base);

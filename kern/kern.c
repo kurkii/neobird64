@@ -57,7 +57,7 @@ void _start(void) {
     ft_ctx = fb_init();
     
     if(hhdm_request.response == NULL){
-        log_panic("HHDM offset is null");
+        log_panic("HHDM offset is null, halting");
     }
 
     hhdmoffset = hhdm_request.response->offset;
@@ -71,10 +71,13 @@ void _start(void) {
     log_info("Loading PMM...");
     pmm_init();
     log_success("PMM loaded!");
+    log_info("Loading VMM...");
+    log_success("VMM loaded!");
     printf("Hi!{n}");
     log_info("Initalizing ACPI and APIC..."); 
     init_acpi();
     printf("Done!{n}");
+
     // We're done, just hang...
     hcf();
 

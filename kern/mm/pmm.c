@@ -56,13 +56,18 @@ int find_free_block(void){
 	return -1;
 }
 
-uint64_t alloc_block(){
+uint64_t pmm_alloc_block(){
     int block = find_free_block();
+    if(block == -1){
+        return -1;
+    }
+    
+
     mmap_set(block);
     return block * BLOCK_SIZE;
 }
 
-void dealloc_block(uint64_t block){
+void pmm_free_block(uint64_t block){
     mmap_unset(block);
 }
 
@@ -76,7 +81,7 @@ void pmm_init(){
     struct limine_memmap_entry **entries = memmap->entries;
     memmap_entry_count = memmap->entry_count;
 
-    for(int i = 0; i < memmap_entry_count; i++){  // fetch memory size
+    for(uint64_t i = 0; i < memmap_entry_count; i++){  // fetch memory size
         switch(entries[i]->type){
             case LIMINE_MEMMAP_USABLE:
                 mem_size += entries[i]->length;
@@ -85,7 +90,7 @@ void pmm_init(){
     }
 
     int usable_found = 0;
-    for(int i = 0; i < memmap_entry_count; i++){    // parse memmap
+    for(uint64_t i = 0; i < memmap_entry_count; i++){    // parse memmap
         switch (entries[i]->type) {
             case LIMINE_MEMMAP_USABLE:
                 if(usable_found == 0){
@@ -102,11 +107,6 @@ void pmm_init(){
         };
     }
 
-    if(usable_found == 0){
-        printf("pmm: no suitable memory to place the bitmap{n}");
-        log_panic("Not enough memory, halting.");
-    }
-
     free_blocks = (usable_top / BLOCK_SIZE) * 8;
     block_count = mem_size/BLOCK_SIZE;
 
@@ -116,9 +116,7 @@ void pmm_init(){
 
     printf("pmm: placing bitmap at 0x{xn}", usable_addr);
     bitmap = (uint8_t*)(usable_addr+hhdmoffset);
-    printf("working1{n}");
     memset(bitmap, 0xFF, block_count/8);    // set the entire bitmap as used
-    printf("working2{n}");
 
     for(uint64_t i = 0; i < memmap_entry_count; i++){   // set usable blocks in the bitmap
         switch (entries[i]->type) {
@@ -129,13 +127,10 @@ void pmm_init(){
         }
     }
 
-    printf("working3{n}");
 
-    for(int i = 0; i < block_count/8; i++){     // mark the space used by the bitmap as used
+    for(uint64_t i = 0; i < block_count/8; i++){     // mark the space used by the bitmap as used
         mmap_set(addr2block(usable_addr)+i);
     }
-
-    printf("working4{n}");
 
 }
 
