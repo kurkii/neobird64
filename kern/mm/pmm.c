@@ -44,7 +44,7 @@ uint64_t block2addr(uint64_t block){
     return block * BLOCK_SIZE;
 }
 
-int find_free_block(void){
+uint64_t find_free_block(void){
 	for (uint64_t i = 0; i < block_count / 8; i++)      // find first free block
 		if (bitmap[i] != 0xff)                          // if it isnt all set
 			for (int j = 0; j < 8; j++) {		        // loop through the uint8
@@ -56,15 +56,15 @@ int find_free_block(void){
 	return -1;
 }
 
-uint64_t pmm_alloc_block(){
-    int block = find_free_block();
+uint64_t *pmm_alloc_block(){
+    uint64_t block = find_free_block();
     if(block == -1){
-        return -1;
+        return NULL;
     }
     
 
     mmap_set(block);
-    return block * BLOCK_SIZE;
+    return (uint64_t*)(block * BLOCK_SIZE);
 }
 
 void pmm_free_block(uint64_t block){
@@ -134,6 +134,6 @@ void pmm_init(){
 
 }
 
-uint64_t fetch_mem(){
+uint64_t pmm_fetch_mem(){
     return mem_size;
 }

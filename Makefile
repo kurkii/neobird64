@@ -126,7 +126,9 @@ debug:
 
 	$(CC) -c $(KERN)/sys/keyboard/ps2.c -o $(BUILD_DIR)/ps2.o $(CFLAGS) $(CDEBUG)
 
-	$(CC) -c $(KERN)/mm/pmm.c -o $(BUILD_DIR)/pmm.o $(CFLAGS) $(CDEBUG)
+	$(CC) -c $(KERN)/mm/pmm.c -o $(BUILD_DIR)/pmm.o $(CFLAGS)
+	$(CC) -c $(KERN)/mm/vmm.c -o $(BUILD_DIR)/vmm.o $(CFLAGS)
+
 
 	amd64-elf-ld -o $(BUILD_DIR)/neobird64.elf  $(BUILD_DIR)/*.o $(LDFLAGS) $(CDEBUG)
 

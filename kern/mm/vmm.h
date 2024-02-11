@@ -1,9 +1,8 @@
 #include <stdint.h>
 
-#pragma once
 
 typedef struct{
-    uint64_t pml4addr;
+    uint64_t *pml4addr;
 } page_map;
 
 #define PTE_BIT_PRESENT (1ul << 0ul)
@@ -18,7 +17,7 @@ typedef struct{
 #define PTE_BIT_EXECUTE_DISABLE (1ul << 63ul)
 
 void vmm_map_page(page_map pgmp, uint64_t virtual_addr, uint64_t physical_addr, uint64_t flags);
-
+void vmm_init();
 /*
  * PML4 (Page Map Level 4):
  *  - level 4

@@ -13,8 +13,8 @@ position draw_char_pt(position pos, struct limine_framebuffer *fb, char c);
 
 void print_char(struct flanterm_context *ft_ctx, char c);
 void print_str(struct flanterm_context *ft_ctx, char *str);
-void print_int(struct flanterm_context *ft_ctx, long long i);
-void print_hex(struct flanterm_context *ft_ctx, long long num);
+void print_int(struct flanterm_context *ft_ctx, uint64_t i);
+void print_hex(struct flanterm_context *ft_ctx, uint64_t num);
 char toupper(char c);
 
 #define ANSI_COLOR_RED     "\x1b[31m"

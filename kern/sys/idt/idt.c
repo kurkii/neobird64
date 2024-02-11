@@ -160,9 +160,9 @@ void exception_handler(struct int_frame *r){
         printf("                   /`{n}");
         printf("{n}");
         printf("{n}");
-        printf("rax {d} | rbx {d} | rcx {d} | rdx {dn}", r->rax, r->rbx, r->rcx, r->rdx);
-        printf("rdi {d} | rsi 0x{x} | rbp 0x{xn}", r->rdi, r->rsi, r->rbp);
-        printf("r8 {d} | r9 {d} | r10 {d} | r11 {d} | r12 {d} | r13 {d} | r14 {d} | r15 {dn}", r->r8, r->r9, r->r10, r->r11, r->r12, r->r13, r->r14, r->r15);
+        printf("rax 0x{x} | rbx 0x{x} | rcx 0x{x} | rdx 0x{xn}", r->rax, r->rbx, r->rcx, r->rdx);
+        printf("rdi 0x{x} | rsi 0x{x} | rbp 0x{xn}", r->rdi, r->rsi, r->rbp);
+        printf("r8 0x{x} | r9 0x{x} | r10 0x{x} | r11 0x{x} | r12 0x{x} | r13 0x{x} | r14 0x{x} | r15 0x{xn}", r->r8, r->r9, r->r10, r->r11, r->r12, r->r13, r->r14, r->r15);
         printf("rip 0x{x} | cs 0x{x} | ss 0x{x} | rsp 0x{x} | rflags 0x{xn}", r->rip, r->cs, r->ss, r->rsp, r->rflags);
         __asm__ volatile ("cli; hlt"); // Completely hangs the computer
     }

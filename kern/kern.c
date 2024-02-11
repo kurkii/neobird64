@@ -15,16 +15,14 @@
 #include "sys/acpi/apic.h"
 #include "sys/keyboard/ps2.h"
 #include "mm/pmm.h"
+#include "mm/vmm.h"
  
 static volatile struct limine_framebuffer_request framebuffer_request = {
     .id = LIMINE_FRAMEBUFFER_REQUEST,
     .revision = 0
 };
 
-static volatile struct limine_hhdm_request hhdm_request = {
-    .id = LIMINE_HHDM_REQUEST,
-    .revision = 0
-};
+
 
 struct flanterm_context *fb_init(){
     // Ensure we got a framebuffer.
@@ -50,17 +48,17 @@ static void hcf(void) {
 }
 
 struct flanterm_context *ft_ctx;
-uint64_t hhdmoffset;
+//uint64_t hhdmoffset;
 
 
 void _start(void) {
     ft_ctx = fb_init();
     
-    if(hhdm_request.response == NULL){
+/*     if(hhdm_request.response == NULL){
         log_panic("HHDM offset is null, halting");
     }
 
-    hhdmoffset = hhdm_request.response->offset;
+    hhdmoffset = hhdm_request.response->offset; */
     printf("{k}Welcome to Neobird64 v{skn}", ANSI_COLOR_CYAN, NEOBIRD64_VERSION_MAJOR, ANSI_COLOR_RESET);
     log_info("Loading GDT...");
     gdt_init();
@@ -72,12 +70,16 @@ void _start(void) {
     pmm_init();
     log_success("PMM loaded!");
     log_info("Loading VMM...");
+    vmm_init();
     log_success("VMM loaded!");
     printf("Hi!{n}");
     log_info("Initalizing ACPI and APIC..."); 
     init_acpi();
     printf("Done!{n}");
-
+    uint64_t *addr = pmm_alloc_block();
+    printf("alloc: 0x{xn}", addr);
+    uint64_t *addrr = pmm_alloc_block();
+    printf("alloc: 0x{xn}", addrr);
     // We're done, just hang...
     hcf();
 

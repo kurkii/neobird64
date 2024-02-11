@@ -12,7 +12,7 @@ void print_str(struct flanterm_context *ft_ctx, char *str){
     flanterm_write(ft_ctx, str, strlen(str));
 }
 
-void print_int(struct flanterm_context *ft_ctx, long long num){
+void print_int(struct flanterm_context *ft_ctx, uint64_t num){
     int arr[MAX_INTERGER_SIZE];
     int j = 0;
     int digitscount = 0;
@@ -72,7 +72,7 @@ void print_int(struct flanterm_context *ft_ctx, long long num){
     }
 }
 
-void print_hex(struct flanterm_context *ft_ctx, long long num){
+void print_hex(struct flanterm_context *ft_ctx, uint64_t num){
     int arr[MAX_INTERGER_SIZE];
     int j = 0;
     int digitscount = 0;
