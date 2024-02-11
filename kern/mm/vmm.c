@@ -20,7 +20,7 @@ static volatile struct limine_hhdm_request hhdm_request = {
 
 struct limine_kernel_address_response *kernel_address;
 
-page_map kernel_page_map = {0x0}; // page map base addr
+page_map kernel_page_map = {0x0};
 
 uint64_t hhdmoffset;
 
@@ -48,7 +48,7 @@ void vmm_init(){
 
     memset((void*)kernel_page_map.pml4addr, 0, PAGE_SIZE);
     printf("YAY");
-    
+
     extern linker_symbol_ptr text_start_addr, text_end_addr,
         rodata_start_addr, rodata_end_addr,
         data_start_addr, data_end_addr;
