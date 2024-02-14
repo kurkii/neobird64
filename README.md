@@ -8,9 +8,9 @@ cool x86_64 kernel designed for bird
 - [x] GDT
 - [x] IOAPIC & LAPIC
 - [x] Timer & keyboard support
-- [ ] Shell
-- [ ] Memory manager
-
+- [x] Memory management
+- [ ] SMP & Scheduling
+- [ ] Userspace
 # how to compile
 
 - edit makefile CC to fit your cross-compiler
