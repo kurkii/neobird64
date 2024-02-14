@@ -132,9 +132,9 @@ debug:
 
 	amd64-elf-ld -o $(BUILD_DIR)/neobird64.elf  $(BUILD_DIR)/*.o $(LDFLAGS) $(CDEBUG)
 
-	objcopy --only-keep-debug $(BUILD_DIR)/neobird64.elf $(BUILD_DIR)/neobird64.debug
+	#objcopy --only-keep-debug $(BUILD_DIR)/neobird64.elf $(BUILD_DIR)/neobird64.debug
 
-	objcopy --strip-debug $(BUILD_DIR)/neobird64.elf
+	#objcopy --strip-debug $(BUILD_DIR)/neobird64.elf
 
 	# Create a directory which will be our ISO root.
 	mkdir -p iso_root

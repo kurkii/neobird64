@@ -56,7 +56,7 @@ int printf(const char *format_string, ...){
                         state = FORMAT_SPECIFIER;
                         break;
                     default:
-                        print_char(ft_ctx, current);
+                        print_char(ft_ctx, current); // FAIL
                         break;                     
                 }
                 break;

@@ -111,7 +111,8 @@ uint32_t apic_read(void* apic_base, uint32_t reg) {
 }
 
 void apic_write(void* apic_base, uint32_t reg, uint32_t data) {
-    *((volatile uint32_t*)(apic_base + reg)) = data;
+    extern uint64_t hhdmoffset;
+    *((volatile uint32_t*)(apic_base + reg + hhdmoffset)) = data;
 }
 
 ////////////////////////////// Interrupt Handling functions //////////////////////////////
@@ -122,7 +123,7 @@ void apic_send_interrupt(void* apic_base, uint8_t apic, uint8_t vector) {
 }
 
 void apic_eoi(){
-    apic_write((void*)lapic_address, LAPIC_EOI_REG, LAPIC_EOI_COMMAND);
+    apic_write((uint32_t*)lapic_address, LAPIC_EOI_REG, LAPIC_EOI_COMMAND);
 }
 
 void apic_sleep(int ms){
@@ -201,14 +202,12 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     apic_write((void*)madt->lapicaddr, LAPIC_SIVR_REG, spurious_reg | (0x100)); // start recieving ints
     log_success("LAPICs initialized");
     // initalize timer
-    calibrate_timer(madt);
+  calibrate_timer(madt); 
     
     // initalize IOAPIC
     for(int i = 0; i != ((ioapic_read(ioapic_address, IOAPICVER_REG) >> 16) & 0xFF); i++){  // mask all the pins, unnecessary with limine
         ioapic_configure_entry(ioapic_address, i, 1 << 16);
     }
-
-    
     
     asm("sti");
     ps2_int_init();

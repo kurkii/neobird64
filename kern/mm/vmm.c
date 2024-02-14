@@ -25,10 +25,16 @@ page_map kernel_page_map = {0x0};
 uint64_t hhdmoffset;
 
 void vmm_set_ctx(page_map *page_map){
+    printf("hhdmoffset: 0x{xn}", hhdmoffset);
+    printf("address: 0x{xn}", (uint64_t)(page_map->pml4addr));
+    printf("address: 0x{xn}", (uint64_t)(page_map->pml4addr) - hhdmoffset);
+
     __asm__ volatile (
         "movq %0, %%cr3\n"
         : : "r" ((uint64_t *)((uint64_t)(page_map->pml4addr) - hhdmoffset)) : "memory"
     );
+
+    printf("hey");
 }
 
 
@@ -54,15 +60,9 @@ void vmm_init(){
 
     printf("0x{xn}", kernel_page_map.pml4addr);
 
-    memset((void*)kernel_page_map.pml4addr, 0, PAGE_SIZE);
-    printf("YAY");
+    memset(kernel_page_map.pml4addr, 12, PAGE_SIZE);
 
-    // map pmm bitmap
-    extern uint64_t pmm_block_count;
-    extern uint64_t pmm_usable_addr;
-    for(uint64_t i = 0; i < pmm_block_count/8 ;i+=4096){
-        vmm_map_page(kernel_page_map, pmm_usable_addr+hhdmoffset+i, pmm_usable_addr+i, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
-    }
+
 
     // map kernel, stolen
     extern linker_symbol_ptr text_start_addr, text_end_addr,
@@ -75,49 +75,60 @@ void vmm_init(){
         text_end = ALIGN_UP((uint64_t)text_end_addr, PAGE_SIZE),
         rodata_end = ALIGN_UP((uint64_t)rodata_end_addr, PAGE_SIZE),
         data_end = ALIGN_UP((uint64_t)data_end_addr, PAGE_SIZE); 
-    for (uint64_t text_addr = text_start; text_addr < text_end; text_addr += PAGE_SIZE) {
-        uint64_t phys = text_addr - kernel_address->virtual_base + kernel_address->physical_base;
-        vmm_map_page(kernel_page_map, text_addr, phys, PTE_BIT_PRESENT);
-    }
 
-    for (uint64_t rodata_addr = rodata_start; rodata_addr < rodata_end; rodata_addr += PAGE_SIZE) {
-        uint64_t phys = rodata_addr - kernel_address->virtual_base + kernel_address->physical_base;
-        vmm_map_page(kernel_page_map, rodata_addr, phys, PTE_BIT_PRESENT | PTE_BIT_EXECUTE_DISABLE);
-    }
 
-    for (uint64_t data_addr = data_start; data_addr < data_end; data_addr += PAGE_SIZE) {
-        uint64_t phys = data_addr - kernel_address->virtual_base + kernel_address->physical_base;
-        vmm_map_page(kernel_page_map, data_addr, phys, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE | PTE_BIT_EXECUTE_DISABLE);
+    // map pmm bitmap
+    extern uint64_t pmm_block_count;
+    extern uint64_t pmm_usable_addr;
+    for(uint64_t i = 0; i < pmm_block_count/8 ;i+=4096){
+        vmm_map_page(&kernel_page_map, pmm_usable_addr+hhdmoffset+i, pmm_usable_addr+i, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
     }
 
     extern struct limine_memmap_response *memmap;
     for(uint64_t i = 0; i < memmap->entry_count; i++){
         if(memmap->entries[i]->type == LIMINE_MEMMAP_USABLE){
             for(uint64_t j = 0; j < memmap->entries[i]->length; j+=PAGE_SIZE){
-                vmm_map_page(kernel_page_map, memmap->entries[i]->base+j+hhdmoffset, memmap->entries[i]->base+j, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
+                vmm_map_page(&kernel_page_map, memmap->entries[i]->base+j+hhdmoffset, memmap->entries[i]->base+j, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
             }
         }
         if(memmap->entries[i]->type == LIMINE_MEMMAP_FRAMEBUFFER){
             for(uint64_t j = 0; j < memmap->entries[i]->length; j+=PAGE_SIZE){
-                vmm_map_page(kernel_page_map, memmap->entries[i]->base+j+hhdmoffset, memmap->entries[i]->base+j, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE | PTE_BIT_EXECUTE_DISABLE);
+                vmm_map_page(&kernel_page_map, memmap->entries[i]->base+j+hhdmoffset, memmap->entries[i]->base+j, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE | PTE_BIT_EXECUTE_DISABLE);
             }
         }
         if(memmap->entries[i]->type == LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE){
             for(uint64_t j = 0; j < memmap->entries[i]->length; j+=PAGE_SIZE){
-                vmm_map_page(kernel_page_map, memmap->entries[i]->base+j+hhdmoffset, memmap->entries[i]->base+j, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
+                vmm_map_page(&kernel_page_map, memmap->entries[i]->base+j+hhdmoffset, memmap->entries[i]->base+j, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
             }
         }
 
     }
-    printf("yo");
+
+    for (uintptr_t text_addr = text_start; text_addr < text_end; text_addr += PAGE_SIZE) {
+        uintptr_t phys = text_addr - kernel_address->virtual_base + kernel_address->physical_base;
+        vmm_map_page(&kernel_page_map, text_addr, phys, PTE_BIT_PRESENT);
+    }
+
+    for (uintptr_t rodata_addr = rodata_start; rodata_addr < rodata_end; rodata_addr += PAGE_SIZE) {
+        uintptr_t phys = rodata_addr - kernel_address->virtual_base + kernel_address->physical_base;
+        vmm_map_page(&kernel_page_map, rodata_addr, phys, PTE_BIT_PRESENT | PTE_BIT_EXECUTE_DISABLE);
+    }
+
+    for (uintptr_t data_addr = data_start; data_addr < data_end; data_addr += PAGE_SIZE) {
+        uintptr_t phys = data_addr - kernel_address->virtual_base + kernel_address->physical_base;
+        vmm_map_page(&kernel_page_map, data_addr, phys, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE | PTE_BIT_EXECUTE_DISABLE);
+    }
+    extern uint32_t *lapic_address;
+    vmm_map_page(&kernel_page_map, ALIGN_DOWN(((uint32_t)lapic_address+hhdmoffset), PAGE_SIZE), ALIGN_DOWN((uint32_t)lapic_address, PAGE_SIZE), PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
+    extern uint64_t *ioapic_address;
+    vmm_map_page(&kernel_page_map, (uint64_t)ioapic_address+hhdmoffset, (uint64_t)ioapic_address, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE );
     vmm_set_ctx(&kernel_page_map);
-    printf("you good?");
+    //printf("you good?");
     asm volatile(
         "movq %%cr3, %%rax\n\
 	    movq %%rax, %%cr3\n"
         : : : "rax"
    );
-    printf("you good?");
     
 }
 
@@ -125,17 +136,21 @@ uint64_t *get_lower_table(uint64_t *page_map_ptr, uint64_t indx){
     if((page_map_ptr[indx] & PTE_BIT_PRESENT) != 0){
         return (uint64_t *)((page_map_ptr[indx] & 0x000ffffffffff000) + hhdmoffset);
     }    
-    uint64_t *new_page = pmm_alloc_block(); 
+    uint64_t *new_page = pmm_alloc_block();
+    if(new_page == NULL){
+        log_panic("PMM failed to allocate block for the vmm");
+    }
+    
+    memset((uint64_t*)((uint64_t)new_page+hhdmoffset), 0, PAGE_SIZE);
     page_map_ptr[indx] = (uint64_t)new_page | PTE_BIT_PRESENT | PTE_BIT_READ_WRITE |  PTE_BIT_ACCESS_ALL;
 
     return (uint64_t*)((uint64_t)new_page + hhdmoffset);
 }
 
-uint64_t *get_pt(uint64_t *page_map, uint64_t virtual_addr){
-    uint16_t pt_index = (virtual_addr >> 12) & 0x1ff;
-    uint16_t pmd_index = (virtual_addr >> 21) & 0x1ff;
-    uint16_t pud_index = (virtual_addr >> 30) & 0x1ff;
-    uint16_t pgd_index = (virtual_addr >> 39) & 0x1ff;
+static uint64_t *get_pt(uint64_t *page_map, uint64_t virtual_addr){
+    uint64_t pmd_index = (virtual_addr >> 21) & 0x1ff;
+    uint64_t pud_index = (virtual_addr >> 30) & 0x1ff;
+    uint64_t pgd_index = (virtual_addr >> 39) & 0x1ff;
     uint64_t *pgd = NULL, *pud = NULL, *pmd = NULL, *pt = NULL;
     pgd = get_lower_table(page_map, pgd_index);
     if(!pgd){
@@ -152,9 +167,12 @@ uint64_t *get_pt(uint64_t *page_map, uint64_t virtual_addr){
     return pt;
 }
 
-void vmm_map_page(page_map page_map, uint64_t virtual_addr, uint64_t physical_addr, uint64_t flags){
-    uint16_t pt_index = (virtual_addr >> 12) & 0x1ff;
-    uint64_t *pt = get_pt(kernel_page_map.pml4addr, virtual_addr);
+void vmm_map_page(page_map *page_map, uint64_t virtual_addr, uint64_t physical_addr, uint64_t flags){
+    uint64_t pt_index = (virtual_addr >> 12) & 0x1ff;
+    uint64_t *pt = get_pt(page_map->pml4addr, virtual_addr);
+    if(pt == NULL){
+        log_panic("o shit");
+    }
     pt[pt_index] = physical_addr | flags;
 
     asm volatile(

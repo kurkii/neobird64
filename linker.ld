@@ -31,6 +31,8 @@ SECTIONS
     text_end_addr = .;
     /* Move to the next memory page for .rodata */
     . += CONSTANT(MAXPAGESIZE);
+
+    . = ALIGN(0x1000);
     rodata_start_addr = .;
     .rodata : {
         *(.rodata .rodata.*)
@@ -38,11 +40,13 @@ SECTIONS
     rodata_end_addr = .;
     /* Move to the next memory page for .data */
     . += CONSTANT(MAXPAGESIZE);
+
+    . = ALIGN(0x1000);
     data_start_addr = .;
     .data : {
         *(.data .data.*)
     } :data
-    data_end_addr = .;
+    
     /* Dynamic section for relocations, both in its own PHDR and inside data PHDR */
     .dynamic : {
         *(.dynamic)
@@ -56,7 +60,7 @@ SECTIONS
         *(.bss .bss.*)
         *(COMMON)
     } :data
- 
+    data_end_addr = .;
     /* Discard .note.* and .eh_frame since they may cause issues on some hosts. */
     /DISCARD/ : {
         *(.eh_frame)

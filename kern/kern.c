@@ -69,18 +69,14 @@ void _start(void) {
     log_info("Loading PMM...");
     pmm_init();
     log_success("PMM loaded!");
+    log_info("Initalizing ACPI and APIC..."); 
+    init_acpi();
     log_info("Loading VMM...");
     vmm_init();
     log_success("VMM loaded!");
-    printf("Hi!{n}");
-    log_info("Initalizing ACPI and APIC..."); 
-    init_acpi();
     printf("Done!{n}");
-    uint64_t *addr = pmm_alloc_block();
-    printf("alloc: 0x{xn}", addr);
-    uint64_t *addrr = pmm_alloc_block();
-    printf("alloc: 0x{xn}", addrr);
+        printf("Hi!{n}");
     // We're done, just hang...
-    hcf();
+    hcf(); 
 
 }

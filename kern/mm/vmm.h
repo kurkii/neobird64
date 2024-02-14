@@ -16,7 +16,7 @@ typedef struct{
 #define PTE_BIT_GLOBAL (1ul << 8ul)
 #define PTE_BIT_EXECUTE_DISABLE (1ul << 63ul)
 
-void vmm_map_page(page_map pgmp, uint64_t virtual_addr, uint64_t physical_addr, uint64_t flags);
+void vmm_map_page(page_map *pgmp, uint64_t virtual_addr, uint64_t physical_addr, uint64_t flags);
 void vmm_init();
 /*
  * PML4 (Page Map Level 4):

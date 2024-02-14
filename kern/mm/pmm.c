@@ -76,7 +76,7 @@ void pmm_init(){
     if(memmap_request.response == NULL){
         log_panic("Memory map not recieved, halting");
     }
-    
+    printf("hey");
     memmap = memmap_request.response;
     struct limine_memmap_entry **entries = memmap->entries;
     memmap_entry_count = memmap->entry_count;
