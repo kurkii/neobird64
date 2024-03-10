@@ -36,6 +36,11 @@
 #define IOAPICARB_REG       0x2
 #define IOAPICREDTBL_REG(n) (0x10 + 2 * n)  // n being which redtbl register (0-24)
 
+#define ICR_DELMODE_INIT            0x280
+#define ICR_DELMODE_STARTUP         0x300
+
+#define ICR_DEST_ALLEXSELF          0xC0000
+
 
 uint32_t *lapic_address;
 uint64_t *ioapic_address;
@@ -61,6 +66,8 @@ void get_madt_tables(madt_t *madt){
                     printf("apic: Found CPU: {dn}", plapic->apicID);
                     ics_array[i].address = (uint64_t*)cur_ics;
                     ics_array[i].type = cur_ics->entry_type;
+                    ics_array[i].apic_id = plapic->apicID;
+                    ics_array[i].present = true;
                     i++;
                     break;
                 }
@@ -179,7 +186,7 @@ void calibrate_timer(madt_t *madt){
     lapic_address = (uint32_t*)madt->lapicaddr;
     apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x3);         // set divisor 16
     apic_write(lapic_address, LAPIC_INITCNT_REG, 0xFFFFFFFF);   // set timer counter
-    pmt_delay(1000);
+    pmt_delay(50000);
 
     apic_write(lapic_address, LAPIC_TIMERDIV_REG, 0x10000);     // 0x10000 = masked, sdm
     uint32_t calibration = 0xffffffff - apic_read(lapic_address, LAPIC_CURCNT_REG);

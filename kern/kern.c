@@ -16,7 +16,7 @@
 #include "sys/keyboard/ps2.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
- 
+#include "sys/smp/smp.h" 
 static volatile struct limine_framebuffer_request framebuffer_request = {
     .id = LIMINE_FRAMEBUFFER_REQUEST,
     .revision = 0
@@ -69,13 +69,16 @@ void _start(void) {
     log_info("Loading PMM...");
     pmm_init();
     log_success("PMM loaded!");
+
     log_info("Initalizing ACPI and APIC..."); 
     init_acpi();
     log_info("Loading VMM...");
     vmm_init();
     log_success("VMM loaded!");
+    log_info("Starting CPUs...");
+    smp_init();
     printf("Done!{n}");
-        printf("Hi!{n}");
+    printf("Hi!{n}");
     // We're done, just hang...
     hcf(); 
 

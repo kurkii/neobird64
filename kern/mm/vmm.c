@@ -6,6 +6,8 @@
 #include <macros.h>
 #include <stdio.h>
 
+/* Thanks to MunkOS & Lyre for reference */
+
 #define PAGE_SIZE 4096
 
 struct limine_kernel_address_request kernel_addr_request = {
@@ -25,16 +27,12 @@ page_map kernel_page_map = {0x0};
 uint64_t hhdmoffset;
 
 void vmm_set_ctx(page_map *page_map){
-    printf("hhdmoffset: 0x{xn}", hhdmoffset);
-    printf("address: 0x{xn}", (uint64_t)(page_map->pml4addr));
-    printf("address: 0x{xn}", (uint64_t)(page_map->pml4addr) - hhdmoffset);
 
     __asm__ volatile (
         "movq %0, %%cr3\n"
         : : "r" ((uint64_t *)((uint64_t)(page_map->pml4addr) - hhdmoffset)) : "memory"
     );
 
-    printf("hey");
 }
 
 
@@ -54,15 +52,12 @@ void vmm_init(){
         log_panic("Allocating block for page map failed");
     }
 
-    printf("0x{xn}", kernel_page_map.pml4addr);
     
     kernel_page_map.pml4addr = (uint64_t*)((uint64_t)kernel_page_map.pml4addr + hhdmoffset);
 
-    printf("0x{xn}", kernel_page_map.pml4addr);
+    printf("vmm: address of page table: 0x{xn}", (uint64_t)kernel_page_map.pml4addr-hhdmoffset);
 
-    memset(kernel_page_map.pml4addr, 12, PAGE_SIZE);
-
-
+    memset(kernel_page_map.pml4addr, 0, PAGE_SIZE);
 
     // map kernel, stolen
     extern linker_symbol_ptr text_start_addr, text_end_addr,
@@ -83,7 +78,7 @@ void vmm_init(){
     for(uint64_t i = 0; i < pmm_block_count/8 ;i+=4096){
         vmm_map_page(&kernel_page_map, pmm_usable_addr+hhdmoffset+i, pmm_usable_addr+i, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
     }
-
+    // map usable entries, framebuffer and bootloader reclaimable shit
     extern struct limine_memmap_response *memmap;
     for(uint64_t i = 0; i < memmap->entry_count; i++){
         if(memmap->entries[i]->type == LIMINE_MEMMAP_USABLE){
@@ -118,12 +113,13 @@ void vmm_init(){
         uintptr_t phys = data_addr - kernel_address->virtual_base + kernel_address->physical_base;
         vmm_map_page(&kernel_page_map, data_addr, phys, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE | PTE_BIT_EXECUTE_DISABLE);
     }
+
+    // map the lapics
     extern uint32_t *lapic_address;
     vmm_map_page(&kernel_page_map, ALIGN_DOWN(((uint32_t)lapic_address+hhdmoffset), PAGE_SIZE), ALIGN_DOWN((uint32_t)lapic_address, PAGE_SIZE), PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
-    extern uint64_t *ioapic_address;
-    vmm_map_page(&kernel_page_map, (uint64_t)ioapic_address+hhdmoffset, (uint64_t)ioapic_address, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE );
+
     vmm_set_ctx(&kernel_page_map);
-    //printf("you good?");
+
     asm volatile(
         "movq %%cr3, %%rax\n\
 	    movq %%rax, %%cr3\n"

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "acpi.h"
+#include <stdbool.h>
 
 typedef struct{           // https://web.archive.org/web/20161130153145/http://download.intel.com/design/chipsets/datashts/29056601.pdf pg. 11 
     uint8_t vector_num;             // 0x10 to 0xFE
@@ -18,12 +19,16 @@ typedef struct{           // https://web.archive.org/web/20161130153145/http://d
 typedef struct{
     uint64_t *address;
     uint8_t  type;
+    uint8_t apic_id;
+    bool present;
 } __attribute((packed))madt_ics_t;
 
 void init_apic(madt_t *madt, uint64_t hhdmoffset);
 void apic_eoi(void);
+void apic_write(void* apic_base, uint32_t reg, uint32_t data);
 void apic_timer();
 void apic_sleep(int ms);
 void ps2_int_init();
+
 /* int apic_read(void *ioapicaddr, int reg);
 void apic_write(void *ioapicaddr, int reg, int value); */

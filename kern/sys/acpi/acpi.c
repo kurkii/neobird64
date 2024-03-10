@@ -109,7 +109,7 @@ void pmt_delay(size_t us){
     }
     
     uint64_t count = inl(fadt->PMTimerBlock);
-    uint64_t target = (us*PMT_TIMER_RATE)/20000;
+    uint64_t target = (us*PMT_TIMER_RATE)/1000000;
     uint64_t current = 0;
 
     while (current < target) {
