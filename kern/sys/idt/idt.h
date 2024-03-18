@@ -26,3 +26,4 @@ void idt_set_gate(unsigned char vector, void *isr, uint8_t flags);
 void exception_handler(struct int_frame *r);
 
 void idt_init(void);
+void idt_load(void);

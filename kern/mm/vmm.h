@@ -18,6 +18,7 @@ typedef struct{
 
 void vmm_map_page(page_map *pgmp, uint64_t virtual_addr, uint64_t physical_addr, uint64_t flags);
 void vmm_init();
+void vmm_set_ctx(page_map *page_map);
 /*
  * PML4 (Page Map Level 4):
  *  - level 4

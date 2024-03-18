@@ -12,7 +12,6 @@
 #include "sys/gdt/gdt.h"
 #include "sys/idt/idt.h"
 #include "sys/acpi/acpi.h"
-#include "sys/acpi/apic.h"
 #include "sys/keyboard/ps2.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
@@ -48,17 +47,11 @@ static void hcf(void) {
 }
 
 struct flanterm_context *ft_ctx;
-//uint64_t hhdmoffset;
 
 
 void _start(void) {
     ft_ctx = fb_init();
     
-/*     if(hhdm_request.response == NULL){
-        log_panic("HHDM offset is null, halting");
-    }
-
-    hhdmoffset = hhdm_request.response->offset; */
     printf("{k}Welcome to Neobird64 v{skn}", ANSI_COLOR_CYAN, NEOBIRD64_VERSION_MAJOR, ANSI_COLOR_RESET);
     log_info("Loading GDT...");
     gdt_init();

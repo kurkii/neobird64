@@ -9,7 +9,7 @@
 rsdt_t *rsdt;
 xsdt_t *xsdt;
 fadt_t *fadt;
-
+madt_t *madt;
 #define PMT_TIMER_RATE 3579545 // 3.57 MHz
 
 extern uint64_t hhdmoffset;
@@ -85,7 +85,7 @@ void init_acpi(void){
     xsdt = parse_xsdt(hhdmoffset, rsdp);
 
 
-    madt_t *madt = find_acpi_table("APIC", rsdt, xsdt);       // APIC - signature of MADT table
+    madt = find_acpi_table("APIC", rsdt, xsdt);       // APIC - signature of MADT table
 
     if(madt == NULL){
         log_panic("MADT table not found, hanging");

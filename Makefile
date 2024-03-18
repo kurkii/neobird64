@@ -131,6 +131,9 @@ debug:
 	$(CC) -c $(KERN)/mm/pmm.c -o $(BUILD_DIR)/pmm.o $(CFLAGS)
 	$(CC) -c $(KERN)/mm/vmm.c -o $(BUILD_DIR)/vmm.o $(CFLAGS)
 
+		$(CC) -c $(KERN)/sys/smp/smp.c -o $(BUILD_DIR)/smp.o $(CFLAGS)
+
+
 
 	amd64-elf-ld -o $(BUILD_DIR)/neobird64.elf  $(BUILD_DIR)/*.o $(LDFLAGS) $(CDEBUG)
 

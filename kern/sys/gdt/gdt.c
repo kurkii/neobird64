@@ -1,7 +1,7 @@
 #include "gdt.h"
 #include <string.h>
 
-#define GDTSEGMENTS 7
+#define GDTSEGMENTS 7 // 6 + 1 - TSS takes up two segments
 
 static gdtdesc gdt[GDTSEGMENTS];
 gdtptr gdtr;

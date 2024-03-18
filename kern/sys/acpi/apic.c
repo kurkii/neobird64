@@ -43,7 +43,11 @@
 
 
 uint32_t *lapic_address;
+uint32_t lapic_addr;
 uint64_t *ioapic_address;
+
+extern madt_t *madt;
+extern uint64_t hhdmoffset;
 
 uint64_t apic_timer_ticks;
 
@@ -204,12 +208,14 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     // initialize LAPIC
     printf("apic: MADT tables listed through{n}");
     printf("apic: writing to SIV register{n}");
+    lapic_addr = madt->lapicaddr;
     uint32_t spurious_reg = apic_read((void*)madt->lapicaddr, LAPIC_SIVR_REG);
+    printf("madt lapic adr: 0x{xn}", lapic_addr);
     
     apic_write((void*)madt->lapicaddr, LAPIC_SIVR_REG, spurious_reg | (0x100)); // start recieving ints
     log_success("LAPICs initialized");
     // initalize timer
-  calibrate_timer(madt); 
+     calibrate_timer(madt); 
     
     // initalize IOAPIC
     for(int i = 0; i != ((ioapic_read(ioapic_address, IOAPICVER_REG) >> 16) & 0xFF); i++){  // mask all the pins, unnecessary with limine
@@ -219,4 +225,10 @@ void init_apic(madt_t *madt, uint64_t hhdmoffset){
     asm("sti");
     ps2_int_init();
     log_success("IOAPIC initalized");
+}
+
+void init_apic_ap(){
+    uint32_t spurious_reg = apic_read((uint32_t*)(lapic_addr), LAPIC_SIVR_REG); // madt->lapicaddr naredi probleme
+    apic_write((void*)(lapic_addr), LAPIC_SIVR_REG, spurious_reg | (0x100)); // start recieving ints
+    calibrate_timer(madt); // start lapic timer
 }

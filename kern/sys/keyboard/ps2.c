@@ -50,9 +50,13 @@ void ps2_init(){
     }
 
     printf("ps2: assuming US QWERTY layout, scan code 1. other layouts not supported{n}");
+    while(j != 0){  // clear buffer
+        inb(PS2_DATA_PORT);
+        j = (inb(PS2_STATUS_REG)>>1) & 1;
 
+    }
     outb(PS2_COMMAND_REG, 0xAE);    // enable 1st port
-    
+
 }
 
 

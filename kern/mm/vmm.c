@@ -26,6 +26,8 @@ page_map kernel_page_map = {0x0};
 
 uint64_t hhdmoffset;
 
+uint64_t kernel_pml4addr;
+
 void vmm_set_ctx(page_map *page_map){
 
     __asm__ volatile (
@@ -54,6 +56,7 @@ void vmm_init(){
 
     
     kernel_page_map.pml4addr = (uint64_t*)((uint64_t)kernel_page_map.pml4addr + hhdmoffset);
+    kernel_pml4addr = (uint64_t)(kernel_page_map.pml4addr-hhdmoffset);
 
     printf("vmm: address of page table: 0x{xn}", (uint64_t)kernel_page_map.pml4addr-hhdmoffset);
 
@@ -96,6 +99,11 @@ void vmm_init(){
                 vmm_map_page(&kernel_page_map, memmap->entries[i]->base+j+hhdmoffset, memmap->entries[i]->base+j, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
             }
         }
+        if(memmap->entries[i]->type == LIMINE_MEMMAP_ACPI_RECLAIMABLE){
+            for(uint64_t j = 0; j < memmap->entries[i]->length; j+=PAGE_SIZE){
+                vmm_map_page(&kernel_page_map, memmap->entries[i]->base+j+hhdmoffset, memmap->entries[i]->base+j, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
+            }
+        }
 
     }
 
@@ -114,9 +122,13 @@ void vmm_init(){
         vmm_map_page(&kernel_page_map, data_addr, phys, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE | PTE_BIT_EXECUTE_DISABLE);
     }
 
+    for(uint64_t base = 0x1000; base < 0x100000000 ; base += PAGE_SIZE){
+        vmm_map_page(&kernel_page_map, base, base, PTE_BIT_PRESENT | PTE_BIT_READ_WRITE | PTE_BIT_EXECUTE_DISABLE); // identity map everything in 32bit address space, maps madt and other tables
+    }
+
     // map the lapics
-    extern uint32_t *lapic_address;
-    vmm_map_page(&kernel_page_map, ALIGN_DOWN(((uint32_t)lapic_address+hhdmoffset), PAGE_SIZE), ALIGN_DOWN((uint32_t)lapic_address, PAGE_SIZE), PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
+    extern uint32_t lapic_addr;
+    vmm_map_page(&kernel_page_map, ALIGN_DOWN(((uint32_t)lapic_addr+hhdmoffset), PAGE_SIZE), ALIGN_DOWN((uint32_t)lapic_addr, PAGE_SIZE), PTE_BIT_PRESENT | PTE_BIT_READ_WRITE);
 
     vmm_set_ctx(&kernel_page_map);
 
@@ -153,11 +165,11 @@ static uint64_t *get_pt(uint64_t *page_map, uint64_t virtual_addr){
         return NULL;
     }
     pud = get_lower_table(pgd, pud_index);
-    if(!pgd){
+    if(!pud){
         return NULL;
     }
     pt = get_lower_table(pud, pmd_index);
-    if(!pgd){
+    if(!pt){
         return NULL;
     }
     return pt;
@@ -167,7 +179,7 @@ void vmm_map_page(page_map *page_map, uint64_t virtual_addr, uint64_t physical_a
     uint64_t pt_index = (virtual_addr >> 12) & 0x1ff;
     uint64_t *pt = get_pt(page_map->pml4addr, virtual_addr);
     if(pt == NULL){
-        log_panic("o shit");
+        log_panic("Page table not recieved");
     }
     pt[pt_index] = physical_addr | flags;
 

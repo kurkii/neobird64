@@ -29,6 +29,6 @@ void apic_write(void* apic_base, uint32_t reg, uint32_t data);
 void apic_timer();
 void apic_sleep(int ms);
 void ps2_int_init();
-
+void init_apic_ap();
 /* int apic_read(void *ioapicaddr, int reg);
 void apic_write(void *ioapicaddr, int reg, int value); */
