@@ -52,17 +52,17 @@ all:
 
 	$(CC) -c $(KERN)/include/string.c -o $(BUILD_DIR)/string.o $(CFLAGS)
 
-	$(CC) -c $(KERN)/sys/gdt/gdt.c -o $(BUILD_DIR)/gdt.o $(CFLAGS)
-	$(AC) 	 $(KERN)/sys/gdt/gdt.asm -o $(BUILD_DIR)/gdt_asm.o $(NASMFLAGS)
+	$(CC) -c $(KERN)/sys/gdt.c -o $(BUILD_DIR)/gdt.o $(CFLAGS)
+	$(AC) 	 $(KERN)/sys/gdt.asm -o $(BUILD_DIR)/gdt_asm.o $(NASMFLAGS)
 
-	$(CC) -c $(KERN)/sys/idt/idt.c -o $(BUILD_DIR)/idt.o $(CFLAGS)
-	$(AC) 	 $(KERN)/sys/idt/idt.asm -o $(BUILD_DIR)/idt_asm.o $(NASMFLAGS)
+	$(CC) -c $(KERN)/sys/idt.c -o $(BUILD_DIR)/idt.o $(CFLAGS)
+	$(AC) 	 $(KERN)/sys/idt.asm -o $(BUILD_DIR)/idt_asm.o $(NASMFLAGS)
 
 	$(CC) -c $(KERN)/sys/acpi/acpi.c -o $(BUILD_DIR)/acpi.o $(CFLAGS)
 	$(CC) -c $(KERN)/sys/acpi/apic.c -o $(BUILD_DIR)/apic.o $(CFLAGS)
-	$(CC) -c $(KERN)/sys/pic/pit.c -o $(BUILD_DIR)/pit.o $(CFLAGS)
+# $(CC) -c $(KERN)/sys/pic/pit.c -o $(BUILD_DIR)/pit.o $(CFLAGS)
 
-	$(CC) -c $(KERN)/sys/keyboard/ps2.c -o $(BUILD_DIR)/ps2.o $(CFLAGS)
+	$(CC) -c $(KERN)/sys/ps2/ps2.c -o $(BUILD_DIR)/ps2.o $(CFLAGS)
 
 	$(CC) -c $(KERN)/mm/pmm.c -o $(BUILD_DIR)/pmm.o $(CFLAGS)
 	$(CC) -c $(KERN)/mm/vmm.c -o $(BUILD_DIR)/vmm.o $(CFLAGS)
@@ -124,7 +124,7 @@ debug:
 
 	$(CC) -c $(KERN)/sys/acpi/acpi.c -o $(BUILD_DIR)/acpi.o $(CFLAGS) $(CDEBUG)
 	$(CC) -c $(KERN)/sys/acpi/apic.c -o $(BUILD_DIR)/apic.o $(CFLAGS) $(CDEBUG)
-	$(CC) -c $(KERN)/sys/pic/pit.c -o $(BUILD_DIR)/pit.o $(CFLAGS) $(CDEBUG)
+# $(CC) -c $(KERN)/sys/pic/pit.c -o $(BUILD_DIR)/pit.o $(CFLAGS) $(CDEBUG)
 
 	$(CC) -c $(KERN)/sys/keyboard/ps2.c -o $(BUILD_DIR)/ps2.o $(CFLAGS) $(CDEBUG)
 

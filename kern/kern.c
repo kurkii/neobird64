@@ -9,10 +9,10 @@
 #include "flanterm/flanterm.h"
 #include "flanterm/backends/fb.h"
 #include "limine.h"
-#include "sys/gdt/gdt.h"
-#include "sys/idt/idt.h"
+#include "sys/gdt.h"
+#include "sys/idt.h"
 #include "sys/acpi/acpi.h"
-#include "sys/keyboard/ps2.h"
+#include "sys/ps2/ps2.h"
 #include "mm/pmm.h"
 #include "mm/vmm.h"
 #include "sys/smp/smp.h" 
@@ -62,7 +62,6 @@ void _start(void) {
     log_info("Loading PMM...");
     pmm_init();
     log_success("PMM loaded!");
-
     log_info("Initalizing ACPI and APIC..."); 
     init_acpi();
     log_info("Loading VMM...");

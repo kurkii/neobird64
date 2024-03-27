@@ -1,6 +1,6 @@
 #include "idt.h"
-#include "../acpi/apic.h"
-#include "../keyboard/ps2.h"
+#include "acpi/apic.h"
+#include "ps2/ps2.h"
 #include <stdio.h>
 #include <stdbool.h>
 

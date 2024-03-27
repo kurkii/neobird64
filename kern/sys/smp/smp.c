@@ -4,8 +4,8 @@
 #include "../acpi/apic.h"
 #include "../../mm/pmm.h"
 #include "../../mm/vmm.h"
-#include "../gdt/gdt.h"
-#include "../idt/idt.h"
+#include "../gdt.h"
+#include "../idt.h"
 #include <limine.h>
 #include <stdio.h>
 #include <macros.h>
@@ -16,6 +16,8 @@ struct limine_smp_request smp_request = {
     .id = LIMINE_SMP_REQUEST,
     .revision = 0
 }; 
+
+bool state_single_processor;
 
 /* struct limine_smp_info smp_info {
     uint32_t processor_id;
@@ -35,7 +37,6 @@ void ap_trampoline(struct limine_smp_info *smp_info){
     asm("cli");
     gdt_init(); // beware, tss is the same for all cpus
     idt_load();
-    //asm("int $0");
     vmm_set_ctx(&kernel_page_map);
     asm volatile(
         "movq %%cr3, %%rax\n\
@@ -57,6 +58,11 @@ void smp_init(){
     }
 
     struct limine_smp_info **smp_info = smp_request.response->cpus;
+    if(smp_request.response->cpu_count == 1){
+        printf("smp: single core processor, skipping smp initalization{n}");
+        state_single_processor = true;
+        return;
+    }
     printf("smp: cpu count: {dn}", smp_request.response->cpu_count);
     for(uint64_t i = 0; i < smp_request.response->cpu_count; i++){
         apic_sleep(2); // why does this fix triple fault on real hardware?

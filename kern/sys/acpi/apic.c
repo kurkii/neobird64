@@ -5,9 +5,8 @@
 #include <limine.h>
 #include <io.h>
 #include <log.h>
-#include "../idt/idt.h"
-#include "../pic/pic.h"
-#include "../keyboard/ps2.h"
+#include "../idt.h"
+#include "../ps2/ps2.h"
 
 #define LAPIC_ID_REG        0x20            // lapic id register
 #define LAPIC_VERSION_REG   0x30            // lapic version register
