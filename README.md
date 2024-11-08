@@ -1,4 +1,4 @@
-# ABANDONED - CONTINUATION: (HERE)[https://github.com/lord84-os/lord84] 
+# ABANDONED - CONTINUATION: [LORD84](https://github.com/lord84-os/lord84)
 
 # neobird64
 
