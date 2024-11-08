@@ -1,3 +1,5 @@
+# ABANDONED - CONTINUATION: (HERE)[https://github.com/lord84-os/lord84] 
+
 # neobird64
 
 cool x86_64 kernel designed for bird
